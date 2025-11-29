@@ -1,7 +1,6 @@
 <script setup>
 import { reactive, computed, onMounted } from "vue";
 
-// Vue Dataset, for more info and examples you can check out https://github.com/kouts/vue-dataset/tree/next
 import {
   Dataset,
   DatasetItem,
@@ -156,13 +155,13 @@ th.sort {
 <template>
   <!-- Hero -->
   <BasePageHeading title="Users" subtitle="Manage application users.">
-    <template #extra>
+    <!-- <template #extra>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb breadcrumb-alt">
           <li class="breadcrumb-item" aria-current="page">Users</li>
         </ol>
       </nav>
-    </template>
+    </template> -->
   </BasePageHeading>
   <!-- END Hero -->
 
