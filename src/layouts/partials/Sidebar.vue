@@ -72,7 +72,10 @@ watch(
 
 // Init SimpleBar (custom scrolling)
 onMounted(() => {
-  new SimpleBar(document.getElementById("simplebar-sidebar"));
+  const sidebarElement = document.getElementById("simplebar-sidebar");
+  if (sidebarElement) {
+    new SimpleBar(sidebarElement);
+  }
 });
 </script>
 
