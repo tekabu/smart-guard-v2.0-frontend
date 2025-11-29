@@ -366,15 +366,29 @@ const routes = [
   |
   */
   {
-    path: "/backend",
-    redirect: "/backend/dashboard",
+    path: "/dashboard",
     component: LayoutBackend,
     children: [
       {
-        path: "dashboard",
-        name: "backend-dashboard",
+        path: "",
+        name: "dashboard",
         component: BackendDashboard,
       },
+    ],
+  },
+
+  /*
+  |
+  |--------------------------------------------------------------------------
+  | Backend Routes
+  |--------------------------------------------------------------------------
+  |
+  */
+  {
+    path: "/backend",
+    redirect: "/dashboard",
+    component: LayoutBackend,
+    children: [
 
       /*
       |--------------------------------------------------------------------------

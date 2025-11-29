@@ -13,7 +13,7 @@ import VueCountdown from "@chenfengyuan/vue-countdown";
               <div class="col-md-6 py-3 text-center">
                 <div class="push">
                   <RouterLink
-                    :to="{ name: 'backend-dashboard' }"
+                    :to="{ name: 'dashboard' }"
                     class="link-fx fw-bold fs-1"
                   >
                     <span class="text-white">OneUI Vue Edition</span>

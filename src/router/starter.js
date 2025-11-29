@@ -26,16 +26,19 @@ const routes = [
     ],
   },
   {
-    path: "/backend",
-    redirect: "/backend/dashboard",
+    path: "/dashboard",
     component: LayoutBackend,
     children: [
       {
-        path: "dashboard",
-        name: "backend-dashboard",
+        path: "",
+        name: "dashboard",
         component: Dashboard,
       },
     ],
+  },
+  {
+    path: "/backend",
+    redirect: "/dashboard",
   },
 ];
 

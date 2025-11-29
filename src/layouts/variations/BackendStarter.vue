@@ -39,7 +39,7 @@ store.mainContent({ mode: "narrow" });
           :nodes="[
             {
               name: 'Dashboard',
-              to: 'backend-dashboard',
+              to: 'dashboard',
               icon: 'si si-speedometer',
             },
             {

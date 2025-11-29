@@ -16,7 +16,7 @@
             your landing, authentication, status or error pages.
           </p>
           <RouterLink
-            :to="{ name: 'backend-dashboard' }"
+            :to="{ name: 'dashboard' }"
             class="btn btn-primary px-4 py-3"
             v-click-ripple
           >

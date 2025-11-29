@@ -8,7 +8,7 @@ export default {
   main: [
     {
       name: "Dashboard",
-      to: "backend-dashboard",
+      to: "dashboard",
       icon: "si si-speedometer",
     },
     // You can also set an external link to your main navigation and it will render as a link
@@ -774,7 +774,7 @@ export default {
     },
     {
       name: "Go Back",
-      to: "backend-dashboard",
+      to: "dashboard",
       icon: "si si-action-undo",
     },
   ],
