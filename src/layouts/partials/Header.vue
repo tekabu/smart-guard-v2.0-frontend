@@ -58,17 +58,17 @@ onUnmounted(() => {
               <!-- END Toggle Sidebar -->
 
               <!-- Open Search Section (visible on smaller screens) -->
-              <button
+              <!-- <button
                 type="button"
                 class="btn btn-sm btn-alt-secondary d-md-none"
                 @click="store.headerSearch({ mode: 'on' })"
               >
                 <i class="fa fa-fw fa-search"></i>
-              </button>
+              </button> -->
               <!-- END Open Search Section -->
 
               <!-- Search Form (visible on larger screens) -->
-              <form
+              <!-- <form
                 class="d-none d-md-inline-block"
                 @submit.prevent="onSubmitSearch"
               >
@@ -85,7 +85,7 @@ onUnmounted(() => {
                     <i class="fa fa-fw fa-search"></i>
                   </span>
                 </div>
-              </form>
+              </form> -->
               <!-- END Search Form -->
             </slot>
           </div>
@@ -130,7 +130,7 @@ onUnmounted(() => {
                     <p class="mt-2 mb-0 fw-medium">John Smith</p>
                     <p class="mb-0 text-muted fs-sm fw-medium">Web Developer</p>
                   </div>
-                  <div class="p-2">
+                  <!-- <div class="p-2">
                     <a
                       class="dropdown-item d-flex align-items-center justify-content-between"
                       href="javascript:void(0)"
@@ -151,15 +151,15 @@ onUnmounted(() => {
                     >
                       <span class="fs-sm fw-medium">Settings</span>
                     </a>
-                  </div>
+                  </div> -->
                   <div role="separator" class="dropdown-divider m-0"></div>
                   <div class="p-2">
-                    <RouterLink
+                    <!-- <RouterLink
                       :to="{ name: 'auth-signin' }"
                       class="dropdown-item d-flex align-items-center justify-content-between"
                     >
                       <span class="fs-sm fw-medium">Lock Account</span>
-                    </RouterLink>
+                    </RouterLink> -->
                     <RouterLink
                       :to="{ name: 'auth-signin' }"
                       class="dropdown-item d-flex align-items-center justify-content-between"
@@ -172,7 +172,7 @@ onUnmounted(() => {
               <!-- END User Dropdown -->
 
               <!-- Notifications Dropdown -->
-              <div class="dropdown d-inline-block ms-2">
+              <!-- <div class="dropdown d-inline-block ms-2">
                 <button
                   type="button"
                   class="btn btn-sm btn-alt-secondary space-x-1"
@@ -242,17 +242,17 @@ onUnmounted(() => {
                     </a>
                   </div>
                 </div>
-              </div>
+              </div> -->
               <!-- END Notifications Dropdown -->
 
               <!-- Toggle Side Overlay -->
-              <button
+              <!-- <button
                 type="button"
                 class="btn btn-sm btn-alt-secondary ms-2"
                 @click="store.sideOverlay({ mode: 'toggle' })"
               >
                 <i class="fa fa-fw fa-list-ul fa-flip-horizontal"></i>
-              </button>
+              </button> -->
               <!-- END Toggle Side Overlay -->
             </slot>
           </div>
@@ -262,7 +262,7 @@ onUnmounted(() => {
       <!-- END Header Content -->
 
       <!-- Header Search -->
-      <div
+      <!-- <div
         id="page-header-search"
         class="overlay-header bg-body-extra-light"
         :class="{ show: store.settings.headerSearch }"
@@ -288,7 +288,7 @@ onUnmounted(() => {
             </div>
           </form>
         </div>
-      </div>
+      </div> -->
       <!-- END Header Search -->
 
       <!-- Header Loader -->
