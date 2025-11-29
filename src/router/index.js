@@ -234,20 +234,8 @@ const SpecialsComingSoon = () => import("@/views/specials/ComingSoonView.vue");
 
 // Auth
 const AuthSignIn = () => import("@/views/auth/SignInView.vue");
-const AuthSignIn2 = () => import("@/views/auth/SignIn2View.vue");
-const AuthSignIn3 = () => import("@/views/auth/SignIn3View.vue");
 const AuthSignUp = () => import("@/views/auth/SignUpView.vue");
-const AuthSignUp2 = () => import("@/views/auth/SignUp2View.vue");
-const AuthSignUp3 = () => import("@/views/auth/SignUp3View.vue");
-const AuthLock = () => import("@/views/auth/LockView.vue");
-const AuthLock2 = () => import("@/views/auth/Lock2View.vue");
-const AuthLock3 = () => import("@/views/auth/Lock3View.vue");
 const AuthForgotPassword = () => import("@/views/auth/ForgotPasswordView.vue");
-const AuthReminder2 = () => import("@/views/auth/Reminder2View.vue");
-const AuthReminder3 = () => import("@/views/auth/Reminder3View.vue");
-const AuthTwoFactor = () => import("@/views/auth/TwoFactorView.vue");
-const AuthTwoFactor2 = () => import("@/views/auth/TwoFactor2View.vue");
-const AuthTwoFactor3 = () => import("@/views/auth/TwoFactor3View.vue");
 
 // Errors
 const Error400 = () => import("@/views/errors/400View.vue");
@@ -1041,74 +1029,14 @@ const routes = [
         component: AuthSignIn,
       },
       {
-        path: "signin2",
-        name: "auth-signin2",
-        component: AuthSignIn2,
-      },
-      {
-        path: "signin3",
-        name: "auth-signin3",
-        component: AuthSignIn3,
-      },
-      {
         path: "signup",
         name: "auth-signup",
         component: AuthSignUp,
       },
       {
-        path: "signup2",
-        name: "auth-signup2",
-        component: AuthSignUp2,
-      },
-      {
-        path: "signup3",
-        name: "auth-signup3",
-        component: AuthSignUp3,
-      },
-      {
-        path: "lock",
-        name: "auth-lock",
-        component: AuthLock,
-      },
-      {
-        path: "lock2",
-        name: "auth-lock2",
-        component: AuthLock2,
-      },
-      {
-        path: "lock3",
-        name: "auth-lock3",
-        component: AuthLock3,
-      },
-      {
         path: "forgot-password",
         name: "auth-forgot-password",
         component: AuthForgotPassword,
-      },
-      {
-        path: "reminder2",
-        name: "auth-reminder2",
-        component: AuthReminder2,
-      },
-      {
-        path: "reminder3",
-        name: "auth-reminder3",
-        component: AuthReminder3,
-      },
-      {
-        path: "two-factor",
-        name: "auth-two-factor",
-        component: AuthTwoFactor,
-      },
-      {
-        path: "two-factor2",
-        name: "auth-two-factor2",
-        component: AuthTwoFactor2,
-      },
-      {
-        path: "two-factor3",
-        name: "auth-two-factor3",
-        component: AuthTwoFactor3,
       },
     ],
   },
@@ -1180,15 +1108,8 @@ router.beforeEach(async (to, from, next) => {
   // Routes that don't require authentication
   const publicRoutes = [
     'auth-signin',
-    'auth-signin2',
-    'auth-signin3',
     'auth-signup',
-    'auth-signup2',
-    'auth-signup3',
     'auth-forgot-password',
-    'auth-reminder',
-    'auth-reminder2',
-    'auth-reminder3',
   ];
 
   const requiresAuth = !publicRoutes.includes(to.name);
