@@ -198,6 +198,7 @@ th.sort {
                     >
                       {{ th.name }} <i class="gg-select float-end"></i>
                     </th>
+                    <th scope="col" class="text-center">Actions</th>
                   </tr>
                 </thead>
                 <DatasetItem tag="tbody" class="fs-sm">
@@ -206,6 +207,16 @@ th.sort {
                       <th scope="row">{{ rowIndex + 1 }}</th>
                       <td style="min-width: 150px">{{ row.name }}</td>
                       <td>{{ row.email }}</td>
+                      <td class="text-center">
+                        <div class="btn-group">
+                          <button type="button" class="btn btn-sm btn-alt-secondary">
+                            <i class="fa fa-fw fa-pencil-alt"></i>
+                          </button>
+                          <button type="button" class="btn btn-sm btn-alt-secondary">
+                            <i class="fa fa-fw fa-times"></i>
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   </template>
                 </DatasetItem>
