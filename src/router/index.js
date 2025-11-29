@@ -10,6 +10,13 @@ import LayoutSimple from "@/layouts/variations/Simple.vue";
 // Components
 const Dashboard = () => import("@/views/dashboard/DashboardView.vue");
 const Users = () => import("@/views/users/UsersView.vue");
+const Students = () => import("@/views/students/StudentsView.vue");
+const Faculty = () => import("@/views/faculty/FacultyView.vue");
+const Devices = () => import("@/views/devices/DevicesView.vue");
+const DeviceBoards = () => import("@/views/deviceBoards/DeviceBoardsView.vue");
+const Rooms = () => import("@/views/rooms/RoomsView.vue");
+const Subjects = () => import("@/views/subjects/SubjectsView.vue");
+const Schedules = () => import("@/views/schedules/SchedulesView.vue");
 
 // Auth
 const AuthSignIn = () => import("@/views/auth/SignInView.vue");
@@ -46,6 +53,83 @@ const routes = [
         path: "",
         name: "users",
         component: Users,
+      },
+    ],
+  },
+  {
+    path: "/students",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "students",
+        component: Students,
+      },
+    ],
+  },
+  {
+    path: "/faculty",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "faculty",
+        component: Faculty,
+      },
+    ],
+  },
+  {
+    path: "/devices",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "devices",
+        component: Devices,
+      },
+    ],
+  },
+  {
+    path: "/device-boards",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "deviceBoards",
+        component: DeviceBoards,
+      },
+    ],
+  },
+  {
+    path: "/rooms",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "rooms",
+        component: Rooms,
+      },
+    ],
+  },
+  {
+    path: "/subjects",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "subjects",
+        component: Subjects,
+      },
+    ],
+  },
+  {
+    path: "/schedules",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "schedules",
+        component: Schedules,
       },
     ],
   },

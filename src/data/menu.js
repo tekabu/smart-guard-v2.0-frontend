@@ -16,6 +16,41 @@ export default {
       icon: "si si-users",
       to: "users",
     },
+    {
+      name: "Students",
+      icon: "si si-graduation",
+      to: "students",
+    },
+    {
+      name: "Faculty",
+      icon: "si si-graduation",
+      to: "faculty",
+    },
+    {
+      name: "Devices",
+      icon: "si si-laptop",
+      to: "devices",
+    },
+    {
+      name: "Device Boards",
+      icon: "si si-cpu",
+      to: "deviceBoards",
+    },
+    {
+      name: "Rooms",
+      icon: "si si-home",
+      to: "rooms",
+    },
+    {
+      name: "Subjects",
+      icon: "si si-book-open",
+      to: "subjects",
+    },
+    {
+      name: "Schedules",
+      icon: "si si-calendar",
+      to: "schedules",
+    },
   ],
   boxed: [
     {

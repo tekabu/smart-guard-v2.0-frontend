@@ -11,30 +11,12 @@ import {
 } from "vue-dataset";
 
 import EditUserModal from "./EditUserModal.vue";
+import usersService from "@/services/users";
 
-// Dummy user data
-const users = reactive([
-  { id: 1, name: "John Doe", email: "john.doe@example.com", active: true },
-  { id: 2, name: "Jane Smith", email: "jane.smith@example.com", active: true },
-  { id: 3, name: "Michael Johnson", email: "michael.j@example.com", active: true },
-  { id: 4, name: "Emily Davis", email: "emily.davis@example.com", active: false },
-  { id: 5, name: "David Wilson", email: "david.wilson@example.com", active: true },
-  { id: 6, name: "Sarah Brown", email: "sarah.brown@example.com", active: true },
-  { id: 7, name: "Robert Taylor", email: "robert.t@example.com", active: true },
-  { id: 8, name: "Lisa Anderson", email: "lisa.anderson@example.com", active: false },
-  { id: 9, name: "James Martinez", email: "james.m@example.com", active: true },
-  { id: 10, name: "Jennifer Garcia", email: "jennifer.g@example.com", active: true },
-  { id: 11, name: "William Rodriguez", email: "william.r@example.com", active: true },
-  { id: 12, name: "Maria Martinez", email: "maria.martinez@example.com", active: true },
-  { id: 13, name: "Christopher Lee", email: "chris.lee@example.com", active: false },
-  { id: 14, name: "Patricia White", email: "patricia.w@example.com", active: true },
-  { id: 15, name: "Daniel Harris", email: "daniel.harris@example.com", active: true },
-  { id: 16, name: "Nancy Clark", email: "nancy.clark@example.com", active: true },
-  { id: 17, name: "Matthew Lewis", email: "matthew.lewis@example.com", active: true },
-  { id: 18, name: "Linda Walker", email: "linda.walker@example.com", active: true },
-  { id: 19, name: "Anthony Hall", email: "anthony.hall@example.com", active: false },
-  { id: 20, name: "Barbara Allen", email: "barbara.allen@example.com", active: true },
-]);
+// Users data from API
+const users = ref([]);
+const isLoading = ref(true);
+const error = ref(null);
 
 // Helper variables
 const cols = reactive([
@@ -48,7 +30,31 @@ const cols = reactive([
     field: "email",
     sort: "",
   },
+  {
+    name: "Role",
+    field: "role",
+    sort: "",
+  },
 ]);
+
+// Fetch users from API
+const fetchUsers = async () => {
+  try {
+    isLoading.value = true;
+    error.value = null;
+    
+    // Get only ADMIN and STAFF users
+    const response = await usersService.getAll();
+    users.value = response.data.filter(user => 
+      user.role === 'ADMIN' || user.role === 'STAFF'
+    );
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    error.value = 'Failed to load users. Please try again.';
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 // Sort by functionality
 const sortBy = computed(() => {
@@ -90,19 +96,8 @@ function onSort(event, i) {
 
 // Apply a few Bootstrap 5 optimizations
 onMounted(() => {
-  // Remove labels from
-  document.querySelectorAll("#datasetLength label").forEach((el) => {
-    el.remove();
-  });
-
-  // Replace select classes
-  let selectLength = document.querySelector("#datasetLength select");
-
-  if (selectLength) {
-    selectLength.classList = "";
-    selectLength.classList.add("form-select");
-    selectLength.style.width = "80px";
-  }
+  // Fetch users on component mount
+  fetchUsers();
 });
 
 // Modal state
@@ -118,18 +113,21 @@ function editUser(user) {
 }
 
 // Save user
-function saveUser(updatedUser) {
-  const index = users.findIndex((u) => u.id === updatedUser.id);
-  if (index !== -1) {
-    // Update user in the list (excluding password fields for display)
-    users[index] = {
-      id: updatedUser.id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      active: updatedUser.active,
-    };
+async function saveUser(updatedUser) {
+  try {
+    const response = await usersService.update(updatedUser.id, updatedUser);
+    
+    // Update user in the local list
+    const index = users.value.findIndex((u) => u.id === updatedUser.id);
+    if (index !== -1) {
+      users.value[index] = response.data;
+    }
+    
+    showEditModal.value = false;
+  } catch (err) {
+    console.error('Error saving user:', err);
+    alert('Failed to save user. Please try again.');
   }
-  showEditModal.value = false;
 }
 
 // Show delete confirmation
@@ -139,15 +137,22 @@ function confirmDelete(user) {
 }
 
 // Delete user
-function deleteUser() {
-  if (userToDelete.value) {
-    const index = users.findIndex((u) => u.id === userToDelete.value.id);
+async function deleteUser() {
+  try {
+    await usersService.delete(userToDelete.value.id);
+    
+    // Remove user from local list
+    const index = users.value.findIndex((u) => u.id === userToDelete.value.id);
     if (index !== -1) {
-      users.splice(index, 1);
+      users.value.splice(index, 1);
     }
+    
+    showDeleteModal.value = false;
+    userToDelete.value = null;
+  } catch (err) {
+    console.error('Error deleting user:', err);
+    alert('Failed to delete user. Please try again.');
   }
-  showDeleteModal.value = false;
-  userToDelete.value = null;
 }
 
 // Cancel delete
@@ -243,17 +248,45 @@ th.sort {
   <!-- Page Content -->
   <div class="content">
     <BaseBlock title="User List" content-full>
-      <Dataset
-        v-slot="{ ds }"
-        :ds-data="users"
-        :ds-sortby="sortBy"
-        :ds-search-in="['name', 'email']"
-      >
+      <!-- Loading state -->
+      <div v-if="isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Loading users...</p>
+      </div>
+      
+      <!-- Error state -->
+      <div v-else-if="error" class="alert alert-danger">
+        {{ error }}
+      </div>
+      
+      <!-- Data table -->
+      <template v-else>
+        <Dataset
+          v-slot="{ ds }"
+          :ds-data="users"
+          :ds-sortby="sortBy"
+          :ds-search-in="['name', 'email', 'role']"
+        >
         <div class="row" :data-page-count="ds.dsPagecount">
-          <div id="datasetLength" class="col-md-8 py-2">
-            <DatasetShow />
+          <div class="col-md-6 py-2">
+            <div class="d-flex align-items-center gap-2">
+              <label class="form-label mb-0 fs-sm">Show</label>
+              <select 
+                class="form-select form-select-sm" 
+                style="width: auto; min-width: 65px; max-width: 80px;"
+                @input="ds.setPageCount($event.target.value)"
+              >
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <label class="form-label mb-0 fs-sm">entries</label>
+            </div>
           </div>
-          <div class="col-md-4 py-2">
+          <div class="col-md-6 py-2">
             <DatasetSearch ds-search-placeholder="Search..." />
           </div>
         </div>
@@ -280,8 +313,11 @@ th.sort {
                   <template #default="{ row, rowIndex }">
                     <tr>
                       <th scope="row">{{ rowIndex + 1 }}</th>
-                      <td style="min-width: 150px">{{ row.name }}</td>
+                      <td>{{ row.name }}</td>
                       <td>{{ row.email }}</td>
+                      <td>
+                        <span class="badge bg-primary">{{ row.role }}</span>
+                      </td>
                       <td class="text-center">
                         <div class="btn-group">
                           <button
@@ -316,6 +352,7 @@ th.sort {
           <DatasetPager class="flex-wrap py-3 fs-sm" />
         </div>
       </Dataset>
+      </template>
     </BaseBlock>
   </div>
   <!-- END Page Content -->

@@ -89,6 +89,7 @@ function saveUser() {
                 type="text"
                 class="form-control"
                 id="user-name"
+                autocomplete="name"
                 v-model="formData.name"
                 required
               />
@@ -101,6 +102,7 @@ function saveUser() {
                 type="email"
                 class="form-control"
                 id="user-email"
+                autocomplete="username"
                 v-model="formData.email"
                 required
               />
@@ -113,6 +115,7 @@ function saveUser() {
                 type="password"
                 class="form-control"
                 id="user-password"
+                autocomplete="new-password"
                 v-model="formData.password"
                 placeholder="Leave blank to keep current password"
               />
@@ -130,6 +133,7 @@ function saveUser() {
                 type="password"
                 class="form-control"
                 id="user-confirm-password"
+                autocomplete="new-password"
                 v-model="formData.confirmPassword"
                 placeholder="Confirm new password"
               />

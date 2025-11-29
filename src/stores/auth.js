@@ -65,20 +65,26 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const response = await authService.getUser();
-      user.value = response.data;
+      user.value = response.data.data; // Extract the actual user data from response.data.data
       isAuthenticated.value = true;
 
-      // Optionally store in localStorage for persistence
-      localStorage.setItem('user', JSON.stringify(response.data));
+      // Store in localStorage for persistence
+      localStorage.setItem('user', JSON.stringify(response.data.data));
 
-      return { success: true, user: response.data };
+      return { success: true, user: response.data.data };
     } catch (err) {
-      user.value = null;
-      isAuthenticated.value = false;
+      // Only clear user data if we don't already have a user
+      // This prevents clearing user data when just checking an existing session
+      if (!user.value) {
+        user.value = null;
+        isAuthenticated.value = false;
+      }
       error.value = err.response?.data?.message || 'Failed to fetch user';
 
-      // Clear localStorage if user fetch fails
-      localStorage.removeItem('user');
+      // Clear localStorage only if we're not just checking
+      if (!localStorage.getItem('user') || !user.value) {
+        localStorage.removeItem('user');
+      }
 
       return { success: false, error: error.value };
     } finally {
@@ -117,15 +123,22 @@ export const useAuthStore = defineStore('auth', () => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
-        user.value = JSON.parse(storedUser);
+        const parsedUser = JSON.parse(storedUser);
+        // Handle both formats: direct user data or wrapped in data property
+        user.value = parsedUser.data || parsedUser;
         isAuthenticated.value = true;
+        
+        // Try to verify with server, but don't fail if it doesn't work
+        try {
+          await fetchUser();
+        } catch (error) {
+          // Server verification failed, but keep localStorage user
+          console.warn('Server verification failed, using stored user data');
+        }
       } catch (e) {
         localStorage.removeItem('user');
       }
     }
-
-    // Then verify with server
-    await fetchUser();
   }
 
   /**
