@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, computed, onMounted } from "vue";
+import { reactive, computed, onMounted, ref } from "vue";
 
 import {
   Dataset,
@@ -10,28 +10,30 @@ import {
   DatasetShow,
 } from "vue-dataset";
 
+import EditUserModal from "./EditUserModal.vue";
+
 // Dummy user data
 const users = reactive([
-  { id: 1, name: "John Doe", email: "john.doe@example.com" },
-  { id: 2, name: "Jane Smith", email: "jane.smith@example.com" },
-  { id: 3, name: "Michael Johnson", email: "michael.j@example.com" },
-  { id: 4, name: "Emily Davis", email: "emily.davis@example.com" },
-  { id: 5, name: "David Wilson", email: "david.wilson@example.com" },
-  { id: 6, name: "Sarah Brown", email: "sarah.brown@example.com" },
-  { id: 7, name: "Robert Taylor", email: "robert.t@example.com" },
-  { id: 8, name: "Lisa Anderson", email: "lisa.anderson@example.com" },
-  { id: 9, name: "James Martinez", email: "james.m@example.com" },
-  { id: 10, name: "Jennifer Garcia", email: "jennifer.g@example.com" },
-  { id: 11, name: "William Rodriguez", email: "william.r@example.com" },
-  { id: 12, name: "Maria Martinez", email: "maria.martinez@example.com" },
-  { id: 13, name: "Christopher Lee", email: "chris.lee@example.com" },
-  { id: 14, name: "Patricia White", email: "patricia.w@example.com" },
-  { id: 15, name: "Daniel Harris", email: "daniel.harris@example.com" },
-  { id: 16, name: "Nancy Clark", email: "nancy.clark@example.com" },
-  { id: 17, name: "Matthew Lewis", email: "matthew.lewis@example.com" },
-  { id: 18, name: "Linda Walker", email: "linda.walker@example.com" },
-  { id: 19, name: "Anthony Hall", email: "anthony.hall@example.com" },
-  { id: 20, name: "Barbara Allen", email: "barbara.allen@example.com" },
+  { id: 1, name: "John Doe", email: "john.doe@example.com", active: true },
+  { id: 2, name: "Jane Smith", email: "jane.smith@example.com", active: true },
+  { id: 3, name: "Michael Johnson", email: "michael.j@example.com", active: true },
+  { id: 4, name: "Emily Davis", email: "emily.davis@example.com", active: false },
+  { id: 5, name: "David Wilson", email: "david.wilson@example.com", active: true },
+  { id: 6, name: "Sarah Brown", email: "sarah.brown@example.com", active: true },
+  { id: 7, name: "Robert Taylor", email: "robert.t@example.com", active: true },
+  { id: 8, name: "Lisa Anderson", email: "lisa.anderson@example.com", active: false },
+  { id: 9, name: "James Martinez", email: "james.m@example.com", active: true },
+  { id: 10, name: "Jennifer Garcia", email: "jennifer.g@example.com", active: true },
+  { id: 11, name: "William Rodriguez", email: "william.r@example.com", active: true },
+  { id: 12, name: "Maria Martinez", email: "maria.martinez@example.com", active: true },
+  { id: 13, name: "Christopher Lee", email: "chris.lee@example.com", active: false },
+  { id: 14, name: "Patricia White", email: "patricia.w@example.com", active: true },
+  { id: 15, name: "Daniel Harris", email: "daniel.harris@example.com", active: true },
+  { id: 16, name: "Nancy Clark", email: "nancy.clark@example.com", active: true },
+  { id: 17, name: "Matthew Lewis", email: "matthew.lewis@example.com", active: true },
+  { id: 18, name: "Linda Walker", email: "linda.walker@example.com", active: true },
+  { id: 19, name: "Anthony Hall", email: "anthony.hall@example.com", active: false },
+  { id: 20, name: "Barbara Allen", email: "barbara.allen@example.com", active: true },
 ]);
 
 // Helper variables
@@ -102,6 +104,31 @@ onMounted(() => {
     selectLength.style.width = "80px";
   }
 });
+
+// Modal state
+const showEditModal = ref(false);
+const selectedUser = ref(null);
+
+// Edit user
+function editUser(user) {
+  selectedUser.value = { ...user };
+  showEditModal.value = true;
+}
+
+// Save user
+function saveUser(updatedUser) {
+  const index = users.findIndex((u) => u.id === updatedUser.id);
+  if (index !== -1) {
+    // Update user in the list (excluding password fields for display)
+    users[index] = {
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      active: updatedUser.active,
+    };
+  }
+  showEditModal.value = false;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -209,10 +236,19 @@ th.sort {
                       <td>{{ row.email }}</td>
                       <td class="text-center">
                         <div class="btn-group">
-                          <button type="button" class="btn btn-sm btn-alt-secondary">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-alt-secondary"
+                            @click="editUser(row)"
+                            title="Edit User"
+                          >
                             <i class="fa fa-fw fa-pencil-alt"></i>
                           </button>
-                          <button type="button" class="btn btn-sm btn-alt-secondary">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-alt-secondary"
+                            title="Delete User"
+                          >
                             <i class="fa fa-fw fa-times"></i>
                           </button>
                         </div>
@@ -234,4 +270,12 @@ th.sort {
     </BaseBlock>
   </div>
   <!-- END Page Content -->
+
+  <!-- Edit User Modal -->
+  <EditUserModal
+    :user="selectedUser"
+    :show="showEditModal"
+    @update:show="showEditModal = $event"
+    @save="saveUser"
+  />
 </template>
