@@ -107,7 +107,7 @@ onMounted(() => {
         <div class="p-4 p-xl-5 flex-grow-1 d-flex align-items-center">
           <div class="w-100">
             <RouterLink
-              :to="{ name: 'landing' }"
+              :to="{ name: 'dashboard' }"
               class="link-fx fw-semibold fs-2 text-white"
             >
               One<span class="fw-normal">UI</span>
@@ -152,7 +152,7 @@ onMounted(() => {
       >
         <div class="p-3 w-100 d-lg-none">
           <RouterLink
-            :to="{ name: 'landing' }"
+            :to="{ name: 'dashboard' }"
             class="link-fx fw-semibold fs-3 text-dark"
           >
             One<span class="fw-normal">UI</span>

@@ -42,7 +42,7 @@ store.mainContent({ mode: "boxed" });
       <div class="d-flex align-items-center">
         <!-- Logo -->
         <RouterLink
-          :to="{ name: 'landing' }"
+          :to="{ name: 'dashboard' }"
           class="fw-semibold fs-5 tracking-wider text-dual me-3"
         >
           OneUI

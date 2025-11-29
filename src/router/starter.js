@@ -6,9 +6,6 @@ import NProgress from "nprogress/nprogress.js";
 import LayoutBackend from "@/layouts/variations/BackendStarter.vue";
 import LayoutSimple from "@/layouts/variations/Simple.vue";
 
-// Frontend: Landing
-const Landing = () => import("@/views/starter/LandingView.vue");
-
 // Backend: Dashboard
 const Dashboard = () => import("@/views/starter/DashboardView.vue");
 
@@ -16,14 +13,7 @@ const Dashboard = () => import("@/views/starter/DashboardView.vue");
 const routes = [
   {
     path: "/",
-    component: LayoutSimple,
-    children: [
-      {
-        path: "",
-        name: "landing",
-        component: Landing,
-      },
-    ],
+    redirect: "/dashboard",
   },
   {
     path: "/dashboard",
