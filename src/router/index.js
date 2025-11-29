@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 
 import NProgress from "nprogress/nprogress.js";
 
@@ -372,6 +372,25 @@ const routes = [
   /*
   |
   |--------------------------------------------------------------------------
+  | Users Routes
+  |--------------------------------------------------------------------------
+  |
+  */
+  {
+    path: "/users",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "users",
+        component: Users,
+      },
+    ],
+  },
+
+  /*
+  |
+  |--------------------------------------------------------------------------
   | Backend Routes
   |--------------------------------------------------------------------------
   |
@@ -471,17 +490,6 @@ const routes = [
             component: BackendForumDiscussion,
           },
         ],
-      },
-
-      /*
-      |--------------------------------------------------------------------------
-      | Users Routes
-      |--------------------------------------------------------------------------
-      */
-      {
-        path: "users",
-        name: "users",
-        component: Users,
       },
 
       /*
@@ -1151,7 +1159,7 @@ const routes = [
 
 // Create Router
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   linkActiveClass: "active",
   linkExactActiveClass: "",
   scrollBehavior() {

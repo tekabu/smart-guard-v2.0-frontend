@@ -159,9 +159,6 @@ th.sort {
     <template #extra>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb breadcrumb-alt">
-          <li class="breadcrumb-item">
-            <a class="link-fx" href="javascript:void(0)">Page Packs</a>
-          </li>
           <li class="breadcrumb-item" aria-current="page">Users</li>
         </ol>
       </nav>
