@@ -84,17 +84,17 @@ async function onSubmit() {
           <!-- Sign In Block -->
           <BaseBlock title="Sign In" class="mb-0">
             <template #options>
-              <RouterLink
+              <!-- <RouterLink
                 :to="{ name: 'auth-forgot-password' }"
                 class="btn-block-option fs-sm"
                 >Forgot Password?</RouterLink
-              >
-              <RouterLink
+              > -->
+              <!-- <RouterLink
                 :to="{ name: 'auth-signup' }"
                 class="btn-block-option"
               >
                 <i class="fa fa-user-plus"></i>
-              </RouterLink>
+              </RouterLink> -->
             </template>
 
             <div class="p-sm-3 px-lg-4 px-xxl-5 py-lg-5">
@@ -199,12 +199,12 @@ async function onSubmit() {
                   </div>
                 </div>
               </form>
-              <div class="text-center">
+              <!-- <div class="text-center">
                 <span class="text-muted">Don't have an account?</span>
                 <RouterLink :to="{ name: 'auth-signup' }" class="fw-medium">
                   Sign Up
                 </RouterLink>
-              </div>
+              </div> -->
               <!-- END Sign In Form -->
             </div>
           </BaseBlock>

@@ -50,26 +50,39 @@ const routes = [
     ],
   },
   {
-    path: "/auth",
+    path: "/signin",
     component: LayoutSimple,
     children: [
       {
-        path: "signin",
+        path: "",
         name: "auth-signin",
         component: AuthSignIn,
       },
-      {
-        path: "signup",
-        name: "auth-signup",
-        component: AuthSignUp,
-      },
-      {
-        path: "forgot-password",
-        name: "auth-forgot-password",
-        component: AuthForgotPassword,
-      },
     ],
   },
+  // Temporarily disabled
+  // {
+  //   path: "/signup",
+  //   component: LayoutSimple,
+  //   children: [
+  //     {
+  //       path: "",
+  //       name: "auth-signup", 
+  //       component: AuthSignUp,
+  //     },
+  //   ],
+  // },
+  // {
+  //   path: "/forgot-password",
+  //   component: LayoutSimple,
+  //   children: [
+  //     {
+  //       path: "",
+  //       name: "auth-forgot-password",
+  //       component: AuthForgotPassword,
+  //     },
+  //   ],
+  // },
   {
     path: "/profile",
     name: "backend-pages-generic-profile",
@@ -103,8 +116,9 @@ router.beforeEach(async (to, from, next) => {
   // Routes that don't require authentication
   const publicRoutes = [
     'auth-signin',
-    'auth-signup',
-    'auth-forgot-password',
+    // Temporarily disabled
+    // 'auth-signup',
+    // 'auth-forgot-password',
   ];
 
   const isPublicRoute = publicRoutes.includes(to.name);
@@ -112,17 +126,6 @@ router.beforeEach(async (to, from, next) => {
   // If user is trying to access public routes (auth pages) and is already authenticated
   if (isPublicRoute && authStore.isAuthenticated) {
     return next({ name: 'dashboard' });
-  }
-
-  // If user is trying to access public routes, check if they have a valid session
-  if (isPublicRoute && !authStore.isAuthenticated) {
-    // Try to fetch user silently (in case they have a valid session)
-    await authStore.fetchUser();
-
-    // If they became authenticated after checking session, redirect to dashboard
-    if (authStore.isAuthenticated) {
-      return next({ name: 'dashboard' });
-    }
   }
 
   // If route requires auth and user is not authenticated
