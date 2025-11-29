@@ -1112,10 +1112,26 @@ router.beforeEach(async (to, from, next) => {
     'auth-forgot-password',
   ];
 
-  const requiresAuth = !publicRoutes.includes(to.name);
+  const isPublicRoute = publicRoutes.includes(to.name);
+
+  // If user is trying to access public routes (auth pages) and is already authenticated
+  if (isPublicRoute && authStore.isAuthenticated) {
+    return next({ name: 'dashboard' });
+  }
+
+  // If user is trying to access public routes, check if they have a valid session
+  if (isPublicRoute && !authStore.isAuthenticated) {
+    // Try to fetch user silently (in case they have a valid session)
+    await authStore.fetchUser();
+
+    // If they became authenticated after checking session, redirect to dashboard
+    if (authStore.isAuthenticated) {
+      return next({ name: 'dashboard' });
+    }
+  }
 
   // If route requires auth and user is not authenticated
-  if (requiresAuth && !authStore.isAuthenticated) {
+  if (!isPublicRoute && !authStore.isAuthenticated) {
     // Try to fetch user (in case they have a valid session)
     await authStore.fetchUser();
 
@@ -1123,11 +1139,6 @@ router.beforeEach(async (to, from, next) => {
     if (!authStore.isAuthenticated) {
       return next({ name: 'auth-signin' });
     }
-  }
-
-  // If user is authenticated and trying to access login page, redirect to dashboard
-  if (authStore.isAuthenticated && publicRoutes.includes(to.name)) {
-    return next({ name: 'dashboard' });
   }
 
   next();
