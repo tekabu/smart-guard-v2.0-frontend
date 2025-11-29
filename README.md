@@ -1,6 +1,6 @@
-# oneui-vue-edition
+# Smart Guard Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Smart Guard frontend application built with Vue 3 and Vite.
 
 ## Recommended IDE Setup
 

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 
 import NProgress from "nprogress/nprogress.js";
+import { useAuthStore } from "@/stores/auth";
 
 // Main layout variations
 import LayoutSimple from "@/layouts/variations/Simple.vue";
@@ -1171,6 +1172,44 @@ const router = createRouter({
 // NProgress
 /*eslint-disable no-unused-vars*/
 NProgress.configure({ showSpinner: false });
+
+// Authentication Guard
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore();
+
+  // Routes that don't require authentication
+  const publicRoutes = [
+    'auth-signin',
+    'auth-signin2',
+    'auth-signin3',
+    'auth-signup',
+    'auth-signup2',
+    'auth-signup3',
+    'auth-reminder',
+    'auth-reminder2',
+    'auth-reminder3',
+  ];
+
+  const requiresAuth = !publicRoutes.includes(to.name);
+
+  // If route requires auth and user is not authenticated
+  if (requiresAuth && !authStore.isAuthenticated) {
+    // Try to fetch user (in case they have a valid session)
+    await authStore.fetchUser();
+
+    // If still not authenticated, redirect to login
+    if (!authStore.isAuthenticated) {
+      return next({ name: 'auth-signin' });
+    }
+  }
+
+  // If user is authenticated and trying to access login page, redirect to dashboard
+  if (authStore.isAuthenticated && publicRoutes.includes(to.name)) {
+    return next({ name: 'dashboard' });
+  }
+
+  next();
+});
 
 router.beforeResolve((to, from, next) => {
   if (to.name) {

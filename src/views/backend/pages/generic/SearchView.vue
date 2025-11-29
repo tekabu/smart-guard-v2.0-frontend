@@ -745,13 +745,13 @@
               class="fs-4 fw-semibold p-2 mb-4 border-start border-4 border-primary bg-body-light"
             >
               <span class="text-primary fw-bold">280</span> websites found for
-              <mark class="text-danger">OneUI</mark>
+              <mark class="text-danger">Smart Guard</mark>
             </div>
             <div class="row py-3">
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">
@@ -767,7 +767,7 @@
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">
@@ -783,7 +783,7 @@
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">
@@ -799,7 +799,7 @@
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">
@@ -815,7 +815,7 @@
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">
@@ -831,7 +831,7 @@
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">
@@ -847,7 +847,7 @@
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">
@@ -863,7 +863,7 @@
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">
@@ -879,7 +879,7 @@
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">
@@ -895,7 +895,7 @@
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">
@@ -911,7 +911,7 @@
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">
@@ -927,7 +927,7 @@
               <div class="col-lg-6">
                 <h4 class="h5 mb-1">
                   <a href="javascript:void(0)"
-                    >OneUI - Bootstrap 5 UI Framework</a
+                    >Smart Guard - Bootstrap 5 UI Framework</a
                   >
                 </h4>
                 <div class="fs-sm fw-medium text-success mb-1">

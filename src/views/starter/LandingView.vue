@@ -8,8 +8,7 @@
         <div class="col-lg-8 col-xl-6">
           <i class="fa fa-2x fa-circle-notch text-primary"></i>
           <h1 class="fw=bold mt-3 mb-2">
-            OneUI
-            <span class="fw-light">Vue Edition</span>
+            Smart Guard
           </h1>
           <p class="fs-lg fw-medium text-muted mb-4">
             This is a simple layout based page which you can use as a base for

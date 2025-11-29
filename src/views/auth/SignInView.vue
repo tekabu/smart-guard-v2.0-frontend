@@ -1,28 +1,34 @@
 <script setup>
-import { reactive, computed } from "vue";
+import { reactive, computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useTemplateStore } from "@/stores/template";
+import { useAuthStore } from "@/stores/auth";
 
 // Vuelidate, for more info and examples you can check out https://github.com/vuelidate/vuelidate
 import useVuelidate from "@vuelidate/core";
-import { required, minLength } from "@vuelidate/validators";
+import { required, minLength, email } from "@vuelidate/validators";
 
-// Main store and Router
+// Main store, Auth store and Router
 const store = useTemplateStore();
+const authStore = useAuthStore();
 const router = useRouter();
 
 // Input state variables
 const state = reactive({
-  username: null,
+  email: null,
   password: null,
 });
+
+// Loading and error states
+const isSubmitting = ref(false);
+const errorMessage = ref(null);
 
 // Validation rules
 const rules = computed(() => {
   return {
-    username: {
+    email: {
       required,
-      minLength: minLength(3),
+      email,
     },
     password: {
       required,
@@ -43,8 +49,29 @@ async function onSubmit() {
     return;
   }
 
-  // Go to dashboard
-  router.push({ name: "backend-pages-auth" });
+  isSubmitting.value = true;
+  errorMessage.value = null;
+
+  try {
+    // Attempt login with Laravel API
+    const response = await authStore.login({
+      email: state.email,
+      password: state.password,
+    });
+
+    if (response.success) {
+      // Redirect to dashboard on successful login
+      router.push({ name: "dashboard" });
+    } else {
+      // Show error message
+      errorMessage.value = response.error || "Login failed. Please try again.";
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    errorMessage.value = "An unexpected error occurred. Please try again.";
+  } finally {
+    isSubmitting.value = false;
+  }
 }
 </script>
 
@@ -71,30 +98,48 @@ async function onSubmit() {
             </template>
 
             <div class="p-sm-3 px-lg-4 px-xxl-5 py-lg-5">
-              <h1 class="h2 mb-1">OneUI</h1>
+              <h1 class="h2 mb-1">SmartGuard</h1>
               <p class="fw-medium text-muted">Welcome, please login.</p>
+
+              <!-- Error Message -->
+              <div
+                v-if="errorMessage"
+                class="alert alert-danger alert-dismissible fade show"
+                role="alert"
+              >
+                <i class="fa fa-exclamation-triangle me-2"></i>
+                {{ errorMessage }}
+                <button
+                  type="button"
+                  class="btn-close"
+                  @click="errorMessage = null"
+                  aria-label="Close"
+                ></button>
+              </div>
 
               <!-- Sign In Form -->
               <form @submit.prevent="onSubmit">
                 <div class="py-3">
                   <div class="mb-4">
                     <input
-                      type="text"
+                      type="email"
                       class="form-control form-control-alt form-control-lg"
-                      id="login-username"
-                      name="login-username"
-                      placeholder="Username"
+                      id="login-email"
+                      name="login-email"
+                      placeholder="Email"
+                      autocomplete="email"
                       :class="{
-                        'is-invalid': v$.username.$errors.length,
+                        'is-invalid': v$.email.$errors.length,
                       }"
-                      v-model="state.username"
-                      @blur="v$.username.$touch"
+                      v-model="state.email"
+                      @blur="v$.email.$touch"
+                      :disabled="isSubmitting"
                     />
                     <div
-                      v-if="v$.username.$errors.length"
+                      v-if="v$.email.$errors.length"
                       class="invalid-feedback animated fadeIn"
                     >
-                      Please enter your username
+                      Please enter a valid email address
                     </div>
                   </div>
                   <div class="mb-4">
@@ -104,11 +149,13 @@ async function onSubmit() {
                       id="login-password"
                       name="login-password"
                       placeholder="Password"
+                      autocomplete="current-password"
                       :class="{
                         'is-invalid': v$.password.$errors.length,
                       }"
                       v-model="state.password"
                       @blur="v$.password.$touch"
+                      :disabled="isSubmitting"
                     />
                     <div
                       v-if="v$.password.$errors.length"
@@ -134,9 +181,20 @@ async function onSubmit() {
                 </div>
                 <div class="row mb-4">
                   <div class="col-md-6 col-xl-5">
-                    <button type="submit" class="btn w-100 btn-alt-primary">
-                      <i class="fa fa-fw fa-sign-in-alt me-1 opacity-50"></i>
-                      Sign In
+                    <button
+                      type="submit"
+                      class="btn w-100 btn-alt-primary"
+                      :disabled="isSubmitting"
+                    >
+                      <i
+                        v-if="!isSubmitting"
+                        class="fa fa-fw fa-sign-in-alt me-1 opacity-50"
+                      ></i>
+                      <i
+                        v-else
+                        class="fa fa-fw fa-spinner fa-spin me-1 opacity-50"
+                      ></i>
+                      {{ isSubmitting ? "Signing In..." : "Sign In" }}
                     </button>
                   </div>
                 </div>

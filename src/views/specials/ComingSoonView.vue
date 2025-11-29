@@ -16,7 +16,7 @@ import VueCountdown from "@chenfengyuan/vue-countdown";
                     :to="{ name: 'dashboard' }"
                     class="link-fx fw-bold fs-1"
                   >
-                    <span class="text-white">OneUI Vue Edition</span>
+                    <span class="text-white">Smart Guard</span>
                   </RouterLink>
                   <p class="text-white-75">
                     Stay tuned! We are working on it and it is coming soon!

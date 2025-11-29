@@ -1,7 +1,7 @@
 {
-  "name": "oneui-vue-edition",
+  "name": "smart-guard-frontend",
   "type": "module",
-  "version": "2.7.0",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -41,6 +41,7 @@
     "@vueform/slider": "^2.1.10",
     "@vuelidate/core": "^2.0.3",
     "@vuelidate/validators": "^2.0.4",
+    "axios": "^1.13.2",
     "bootstrap": "5.3.3",
     "chart.js": "^4.4.2",
     "dropzone": "^6.0.0-beta.2",

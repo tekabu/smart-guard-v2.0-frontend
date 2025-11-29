@@ -103,7 +103,7 @@ onMounted(() => {
       <div class="row justify-content-center push">
         <div class="col-md-8 col-lg-6 col-xl-4">
           <!-- Two Factor Block -->
-          <BaseBlock title="OneUI" class="mb-0 text-center" content-full>
+          <BaseBlock title="Smart Guard" class="mb-0 text-center" content-full>
             <div class="p-sm-3 px-lg-4 px-xxl-5 py-lg-5">
               <h1 class="h3 fw-bold mb-1">Two Factor Authentication</h1>
               <p class="fw-medium text-muted">

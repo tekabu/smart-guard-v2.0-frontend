@@ -45,8 +45,7 @@ store.mainContent({ mode: "boxed" });
           :to="{ name: 'dashboard' }"
           class="fw-semibold fs-5 tracking-wider text-dual me-3"
         >
-          OneUI
-          <span class="fw-normal">Vue</span>
+          Smart Guard
         </RouterLink>
         <!-- END Logo -->
 

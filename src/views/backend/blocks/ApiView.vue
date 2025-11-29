@@ -576,8 +576,8 @@ function loadDataForTestBlockAll() {
       <div class="col-md-6">
         <BaseBlock
           ref="testBlockLoading7"
-          title="OneUI"
-          class="block-mode-loading-oneui"
+          title="Smart Guard"
+          class="block-mode-loading-smartguard"
         >
           <template #options>
             <button

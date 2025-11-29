@@ -84,8 +84,7 @@ onBeforeRouteLeave(() => {
               <i class="fa fa-circle-notch text-primary"></i>
             </span>
             <span class="smini-hide fs-5 tracking-wider">
-              OneUI
-              <span class="fw-normal">Vue</span>
+              Smart Guard
             </span>
           </RouterLink>
           <!-- END Logo -->
