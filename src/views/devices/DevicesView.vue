@@ -203,9 +203,9 @@ function formatDate(dateString) {
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
               <div class="d-flex align-items-center gap-2">
-                <label class="form-label mb-0 fs-sm">Show</label>
+                <label class="form-label mb-0">Show</label>
                 <select 
-                  class="form-select form-select-sm" 
+                  class="form-select" 
                   style="width: auto; min-width: 65px; max-width: 80px;"
                   @input="ds.setPageCount($event.target.value)"
                 >
@@ -214,7 +214,7 @@ function formatDate(dateString) {
                   <option value="50">50</option>
                   <option value="100">100</option>
                 </select>
-                <label class="form-label mb-0 fs-sm">entries</label>
+                <label class="form-label mb-0">entries</label>
               </div>
             </div>
             <div class="col-md-6 py-2">
@@ -239,7 +239,7 @@ function formatDate(dateString) {
                       <th scope="col" class="text-center">Actions</th>
                     </tr>
                   </thead>
-                  <DatasetItem tag="tbody" class="fs-sm">
+                  <DatasetItem tag="tbody">
                     <template #default="{ row, rowIndex }">
                       <tr>
                         <td>{{ row.device_id }}</td>
@@ -280,8 +280,8 @@ function formatDate(dateString) {
           <div
             class="d-flex flex-md-row flex-column justify-content-between align-items-center"
           >
-            <DatasetInfo class="py-3 fs-sm" />
-            <DatasetPager class="flex-wrap py-3 fs-sm" />
+            <DatasetInfo class="py-3" />
+            <DatasetPager class="flex-wrap py-3" />
           </div>
         </Dataset>
       </template>
