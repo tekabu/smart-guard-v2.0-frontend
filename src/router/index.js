@@ -21,7 +21,7 @@ const BackendBoxedImage2 = () => import("@/views/backend-boxed/Image2View.vue");
 const BackendBoxedSearch = () => import("@/views/backend-boxed/SearchView.vue");
 
 // Backend: Dashboard
-const BackendDashboard = () => import("@/views/backend/DashboardView.vue");
+const BackendDashboard = () => import("@/views/dashboard/DashboardView.vue");
 
 // Backend: Blog
 const BackendBlogClassic = () => import("@/views/backend/blog/ClassicView.vue");
