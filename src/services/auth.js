@@ -5,8 +5,7 @@ const authService = {
    * Get CSRF cookie from Laravel (required before login/register)
    */
   async getCsrfCookie() {
-    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8021';
-    return await api.get(`${baseURL}/sanctum/csrf-cookie`);
+    return await api.get('/sanctum/csrf-cookie');
   },
 
   /**

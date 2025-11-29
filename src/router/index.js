@@ -242,7 +242,7 @@ const AuthSignUp3 = () => import("@/views/auth/SignUp3View.vue");
 const AuthLock = () => import("@/views/auth/LockView.vue");
 const AuthLock2 = () => import("@/views/auth/Lock2View.vue");
 const AuthLock3 = () => import("@/views/auth/Lock3View.vue");
-const AuthReminder = () => import("@/views/auth/ReminderView.vue");
+const AuthForgotPassword = () => import("@/views/auth/ForgotPasswordView.vue");
 const AuthReminder2 = () => import("@/views/auth/Reminder2View.vue");
 const AuthReminder3 = () => import("@/views/auth/Reminder3View.vue");
 const AuthTwoFactor = () => import("@/views/auth/TwoFactorView.vue");
@@ -1081,9 +1081,9 @@ const routes = [
         component: AuthLock3,
       },
       {
-        path: "reminder",
-        name: "auth-reminder",
-        component: AuthReminder,
+        path: "forgot-password",
+        name: "auth-forgot-password",
+        component: AuthForgotPassword,
       },
       {
         path: "reminder2",
@@ -1185,6 +1185,7 @@ router.beforeEach(async (to, from, next) => {
     'auth-signup',
     'auth-signup2',
     'auth-signup3',
+    'auth-forgot-password',
     'auth-reminder',
     'auth-reminder2',
     'auth-reminder3',

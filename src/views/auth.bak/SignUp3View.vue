@@ -1,16 +1,14 @@
 <script setup>
-import { reactive, computed, ref } from "vue";
+import { reactive, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useTemplateStore } from "@/stores/template";
-import { useAuthStore } from "@/stores/auth";
 
 // Vuelidate, for more info and examples you can check out https://github.com/vuelidate/vuelidate
 import useVuelidate from "@vuelidate/core";
 import { required, minLength, email, sameAs } from "@vuelidate/validators";
 
-// Main store, Auth store and Router
+// Main store and Router
 const store = useTemplateStore();
-const authStore = useAuthStore();
 const router = useRouter();
 
 // Input state variables
@@ -21,11 +19,6 @@ const state = reactive({
   confirmPassword: null,
   terms: null,
 });
-
-// Loading and error states
-const isSubmitting = ref(false);
-const errorMessage = ref(null);
-const validationErrors = ref({});
 
 // Validation rules
 const rules = computed(() => {
@@ -64,103 +57,103 @@ async function onSubmit() {
     return;
   }
 
-  isSubmitting.value = true;
-  errorMessage.value = null;
-  validationErrors.value = {};
-
-  try {
-    // Attempt registration with Laravel API
-    const response = await authStore.register({
-      name: state.username,
-      email: state.email,
-      password: state.password,
-      password_confirmation: state.confirmPassword,
-    });
-
-    if (response.success) {
-      // Redirect to dashboard on successful registration
-      router.push({ name: "dashboard" });
-    } else {
-      // Show error message
-      errorMessage.value = response.error || "Registration failed. Please try again.";
-
-      // Handle validation errors
-      if (response.errors) {
-        validationErrors.value = response.errors;
-      }
-    }
-  } catch (error) {
-    console.error("Registration error:", error);
-    errorMessage.value = "An unexpected error occurred. Please try again.";
-  } finally {
-    isSubmitting.value = false;
-  }
+  // Go to dashboard
+  router.push({ name: "backend-pages-auth" });
 }
 </script>
 
 <template>
   <!-- Page Content -->
-  <div class="hero-static d-flex align-items-center">
-    <div class="content">
-      <div class="row justify-content-center push">
-        <div class="col-md-8 col-lg-6 col-xl-4">
-          <!-- Sign Up Block -->
-          <BaseBlock title="Create Account" class="mb-0">
-            <template #options>
-              <a
-                class="btn-block-option fs-sm"
-                href="javascript:void(0)"
-                data-bs-toggle="modal"
-                data-bs-target="#one-signup-terms"
-                >View Terms</a
+  <div class="bg-primary-dark">
+    <div class="row g-0 bg-primary-dark-op">
+      <!-- Meta Info Section -->
+      <div
+        class="hero-static col-lg-4 d-none d-lg-flex flex-column justify-content-center"
+      >
+        <div class="p-4 p-xl-5 flex-grow-1 d-flex align-items-center">
+          <div class="w-100">
+            <RouterLink
+              :to="{ name: 'dashboard' }"
+              class="link-fx fw-semibold fs-2 text-white"
+            >
+              One<span class="fw-normal">UI</span>
+            </RouterLink>
+            <p class="text-white-75 me-xl-8 mt-2">
+              Creating a new account is completely free. Get started with 5
+              projects to manage and feel free to upgrade as your business grow.
+            </p>
+          </div>
+        </div>
+        <div
+          class="p-4 p-xl-5 d-xl-flex justify-content-between align-items-center fs-sm"
+        >
+          <p class="fw-medium text-white-50 mb-0">
+            <strong>{{ store.app.name + " " + store.app.version }}</strong>
+            &copy; {{ store.app.copyright }}
+          </p>
+          <ul class="list list-inline mb-0 py-2">
+            <li class="list-inline-item">
+              <a class="text-white-75 fw-medium" href="javascript:void(0)"
+                >Legal</a
               >
-              <RouterLink
-                :to="{ name: 'auth-signin' }"
-                class="btn-block-option"
+            </li>
+            <li class="list-inline-item">
+              <a class="text-white-75 fw-medium" href="javascript:void(0)"
+                >Contact</a
               >
-                <i class="fa fa-sign-in-alt"></i>
-              </RouterLink>
-            </template>
+            </li>
+            <li class="list-inline-item">
+              <a class="text-white-75 fw-medium" href="javascript:void(0)"
+                >Terms</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+      <!-- END Meta Info Section -->
 
-            <div class="p-sm-3 px-lg-4 px-xxl-5 py-lg-5">
-              <h1 class="h2 mb-1">Smart Guard</h1>
-              <p class="fw-medium text-muted">
-                Please fill the following details to create a new account.
+      <!-- Main Section -->
+      <div
+        class="hero-static col-lg-8 d-flex flex-column align-items-center bg-body-extra-light"
+      >
+        <div class="p-3 w-100 d-lg-none text-center">
+          <RouterLink
+            :to="{ name: 'dashboard' }"
+            class="link-fx fw-semibold fs-3 text-dark"
+          >
+            One<span class="fw-normal">UI</span>
+          </RouterLink>
+        </div>
+        <div class="p-4 w-100 flex-grow-1 d-flex align-items-center">
+          <div class="w-100">
+            <!-- Header -->
+            <div class="text-center mb-5">
+              <p class="mb-3">
+                <i class="fa fa-2x fa-circle-notch text-primary-light"></i>
               </p>
+              <h1 class="fw-bold mb-2">Create Account</h1>
+              <p class="fw-medium text-muted">
+                Get your access today in one easy step
+              </p>
+            </div>
+            <!-- END Header -->
 
-              <!-- Error Message -->
-              <div
-                v-if="errorMessage"
-                class="alert alert-danger alert-dismissible fade show"
-                role="alert"
-              >
-                <i class="fa fa-exclamation-triangle me-2"></i>
-                {{ errorMessage }}
-                <button
-                  type="button"
-                  class="btn-close"
-                  @click="errorMessage = null"
-                  aria-label="Close"
-                ></button>
-              </div>
-
-              <!-- Sign Up Form -->
-              <form @submit.prevent="onSubmit">
-                <div class="py-3">
+            <!-- Sign Up Form -->
+            <div class="row g-0 justify-content-center">
+              <div class="col-sm-8 col-xl-4">
+                <form @submit.prevent="onSubmit">
                   <div class="mb-4">
                     <input
                       type="text"
-                      class="form-control form-control-lg form-control-alt"
+                      class="form-control form-control-lg form-control-alt py-3"
                       id="signup-username"
                       name="signup-username"
                       placeholder="Username"
-                      autocomplete="username"
                       :class="{
                         'is-invalid': v$.username.$errors.length,
                       }"
                       v-model="state.username"
                       @blur="v$.username.$touch"
-                      :disabled="isSubmitting"
                     />
                     <div
                       v-if="v$.username.$errors.length"
@@ -172,17 +165,15 @@ async function onSubmit() {
                   <div class="mb-4">
                     <input
                       type="email"
-                      class="form-control form-control-lg form-control-alt"
+                      class="form-control form-control-lg form-control-alt py-3"
                       id="signup-email"
                       name="signup-email"
                       placeholder="Email"
-                      autocomplete="email"
                       :class="{
                         'is-invalid': v$.email.$errors.length,
                       }"
                       v-model="state.email"
                       @blur="v$.email.$touch"
-                      :disabled="isSubmitting"
                     />
                     <div
                       v-if="v$.email.$errors.length"
@@ -194,17 +185,15 @@ async function onSubmit() {
                   <div class="mb-4">
                     <input
                       type="password"
-                      class="form-control form-control-lg form-control-alt"
+                      class="form-control form-control-lg form-control-alt py-3"
                       id="signup-password"
                       name="signup-password"
                       placeholder="Password"
-                      autocomplete="new-password"
                       :class="{
                         'is-invalid': v$.password.$errors.length,
                       }"
                       v-model="state.password"
                       @blur="v$.password.$touch"
-                      :disabled="isSubmitting"
                     />
                     <div
                       v-if="v$.password.$errors.length"
@@ -216,17 +205,15 @@ async function onSubmit() {
                   <div class="mb-4">
                     <input
                       type="password"
-                      class="form-control form-control-lg form-control-alt"
+                      class="form-control form-control-lg form-control-alt py-3"
                       id="signup-password-confirm"
                       name="signup-password-confirm"
                       placeholder="Confirm Password"
-                      autocomplete="new-password"
                       :class="{
                         'is-invalid': v$.confirmPassword.$errors.length,
                       }"
                       v-model="state.confirmPassword"
                       @blur="v$.confirmPassword.$touch"
-                      :disabled="isSubmitting"
                     />
                     <div
                       v-if="v$.confirmPassword.$errors.length"
@@ -236,72 +223,80 @@ async function onSubmit() {
                     </div>
                   </div>
                   <div class="mb-4">
-                    <div class="form-check">
-                      <input
-                        class="form-check-input"
-                        type="checkbox"
-                        id="signup-terms"
-                        name="signup-terms"
-                        :class="{
-                          'is-invalid': v$.terms.$errors.length,
-                        }"
-                        v-model="state.terms"
-                        @blur="v$.terms.$touch"
-                      />
-                      <label class="form-check-label" for="signup-terms"
-                        >I agree to Terms &amp; Conditions
+                    <div
+                      class="d-md-flex align-items-md-center justify-content-md-between"
+                    >
+                      <div class="form-check">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          id="signup-terms"
+                          name="signup-terms"
+                          :class="{
+                            'is-invalid': v$.terms.$errors.length,
+                          }"
+                          v-model="state.terms"
+                          @blur="v$.terms.$touch"
+                        />
+                        <label class="form-check-label" for="signup-terms"
+                          >I agree to Terms &amp; Conditions</label
+                        >
+                        <div
+                          v-if="v$.terms.$errors.length"
+                          class="invalid-feedback animated fadeIn"
+                        >
+                          You must agree to the service terms!
+                        </div>
+                      </div>
+                      <div class="py-2">
                         <a
+                          class="fs-sm fw-medium"
                           href="javascript:void(0)"
-                          class="fs-sm"
                           data-bs-toggle="modal"
                           data-bs-target="#one-signup-terms"
-                        >(View)</a></label
-                      >
-                      <div
-                        v-if="v$.terms.$errors.length"
-                        class="invalid-feedback animated fadeIn"
-                      >
-                        You must agree to the service terms!
+                          >View Terms</a
+                        >
                       </div>
                     </div>
                   </div>
-                </div>
-                <div class="row mb-4">
-                  <div class="col-12 col-md-6 col-xl-5 ms-auto">
-                    <button
-                      type="submit"
-                      class="btn w-100 btn-alt-success"
-                      :disabled="isSubmitting"
-                    >
-                      <i
-                        v-if="!isSubmitting"
-                        class="fa fa-fw fa-plus me-1 opacity-50"
-                      ></i>
-                      <i
-                        v-else
-                        class="fa fa-fw fa-spinner fa-spin me-1 opacity-50"
-                      ></i>
-                      {{ isSubmitting ? "Signing Up..." : "Sign Up" }}
+                  <div class="text-center">
+                    <button type="submit" class="btn btn-lg btn-alt-success">
+                      <i class="fa fa-fw fa-plus me-1 opacity-50"></i> Sign Up
                     </button>
                   </div>
-                </div>
-              </form>
-              <div class="text-center">
-                <span class="text-muted">Already have an account?</span>
-                <RouterLink :to="{ name: 'auth-signin' }" class="fw-medium">
-                  Sign In
-                </RouterLink>
+                </form>
               </div>
-              <!-- END Sign Up Form -->
             </div>
-          </BaseBlock>
-          <!-- END Sign Up Block -->
+            <!-- END Sign Up Form -->
+          </div>
+        </div>
+        <div
+          class="px-4 py-3 w-100 d-lg-none d-flex flex-column flex-sm-row justify-content-between fs-sm text-center text-sm-start"
+        >
+          <p class="fw-medium text-black-50 py-2 mb-0">
+            <strong>{{ store.app.name + " " + store.app.version }}</strong>
+            &copy; {{ store.app.copyright }}
+          </p>
+          <ul class="list list-inline py-2 mb-0">
+            <li class="list-inline-item">
+              <a class="text-muted fw-medium" href="javascript:void(0)"
+                >Legal</a
+              >
+            </li>
+            <li class="list-inline-item">
+              <a class="text-muted fw-medium" href="javascript:void(0)"
+                >Contact</a
+              >
+            </li>
+            <li class="list-inline-item">
+              <a class="text-muted fw-medium" href="javascript:void(0)"
+                >Terms</a
+              >
+            </li>
+          </ul>
         </div>
       </div>
-      <div class="fs-sm text-muted text-center">
-        <strong>{{ store.app.name + " " + store.app.version }}</strong> &copy;
-        {{ store.app.copyright }}
-      </div>
+      <!-- END Main Section -->
     </div>
 
     <!-- Terms Modal -->

@@ -46,26 +46,24 @@ async function onSubmit() {
 <template>
   <!-- Page Content -->
   <div class="hero-static d-flex align-items-center">
-    <div class="content">
-      <div class="row justify-content-center push">
-        <div class="col-md-8 col-lg-6 col-xl-4">
-          <!-- Reminder Block -->
-          <BaseBlock title="Password Reminder" class="mb-0">
-            <template #options>
-              <RouterLink
-                :to="{ name: 'auth-signin' }"
-                class="btn-block-option"
-              >
-                <i class="fa fa-sign-in-alt"></i>
-              </RouterLink>
-            </template>
-
-            <div class="p-sm-3 px-lg-4 px-xxl-5 py-lg-5">
-              <h1 class="h2 mb-1">Smart Guard</h1>
-              <p class="fw-medium text-muted">
-                Please provide your account’s email or username and we will send
-                you your password.
-              </p>
+    <div class="w-100">
+      <!-- Reminder Section -->
+      <div class="bg-body-extra-light">
+        <div class="content content-full">
+          <div class="row g-0 justify-content-center">
+            <div class="col-md-8 col-lg-6 col-xl-4 py-4 px-4 px-lg-5">
+              <!-- Header -->
+              <div class="text-center">
+                <p class="mb-2">
+                  <i class="fa fa-2x fa-circle-notch text-primary"></i>
+                </p>
+                <h1 class="h4 mb-1">Password Reminder</h1>
+                <p class="fw-medium text-muted mb-3">
+                  Please provide your account’s email or username and we will
+                  send you your password.
+                </p>
+              </div>
+              <!-- END Header -->
 
               <!-- Reminder Form -->
               <form @submit.prevent="onSubmit">
@@ -89,25 +87,35 @@ async function onSubmit() {
                     Please enter a valid credential
                   </div>
                 </div>
-                <div class="row mb-4">
-                  <div class="col-md-6 col-xl-5">
-                    <button type="submit" class="btn w-100 btn-alt-primary">
-                      <i class="fa fa-fw fa-envelope me-1 opacity-50"></i>
-                      Send Mail
+                <div class="row justify-content-center mb-4">
+                  <div class="col-lg-6 col-xxl-5">
+                    <button type="submit" class="btn w-100 btn-primary">
+                      <i class="fa fa-fw fa-envelope me-1"></i> Send Mail
                     </button>
                   </div>
                 </div>
               </form>
               <!-- END Reminder Form -->
+
+              <div class="text-center">
+                <RouterLink
+                  :to="{ name: 'auth-signin2' }"
+                  class="fs-sm fw-medium"
+                  >Login?</RouterLink
+                >
+              </div>
             </div>
-          </BaseBlock>
-          <!-- END Reminder Block -->
+          </div>
         </div>
       </div>
-      <div class="fs-sm text-muted text-center">
+      <!-- END Reminder Section -->
+
+      <!-- Footer -->
+      <div class="fs-sm text-center text-muted py-3">
         <strong>{{ store.app.name + " " + store.app.version }}</strong> &copy;
         {{ store.app.copyright }}
       </div>
+      <!-- END Footer -->
     </div>
   </div>
   <!-- END Page Content -->

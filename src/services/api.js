@@ -7,7 +7,11 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
   },
+  withXSRFToken: true, // Automatically send XSRF token
+  xsrfCookieName: 'XSRF-TOKEN', // Laravel's CSRF cookie name
+  xsrfHeaderName: 'X-XSRF-TOKEN', // Laravel's CSRF header name
 });
 
 // Request interceptor

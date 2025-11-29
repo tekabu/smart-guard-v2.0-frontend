@@ -679,8 +679,8 @@ export default {
           to: "auth-lock3",
         },
         {
-          name: "Pass Reminder",
-          to: "auth-reminder",
+          name: "Forgot Password",
+          to: "auth-forgot-password",
         },
         {
           name: "Pass Reminder 2",

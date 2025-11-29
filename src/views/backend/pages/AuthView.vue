@@ -78,7 +78,7 @@
       <div class="col-md-6 col-xxl-4">
         <!-- Password Reminder -->
         <RouterLink
-          :to="{ name: 'auth-reminder' }"
+          :to="{ name: 'auth-forgot-password' }"
           custom
           v-slot="{ href, navigate }"
         >
