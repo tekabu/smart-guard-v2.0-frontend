@@ -46,6 +46,9 @@ const BackendForumTopics = () => import("@/views/backend/forum/TopicsView.vue");
 const BackendForumDiscussion = () =>
   import("@/views/backend/forum/DiscussionView.vue");
 
+// Users
+const Users = () => import("@/views/users/UsersView.vue");
+
 // Backend: Blocks
 const BackendBlocksStyles = () =>
   import("@/views/backend/blocks/StylesView.vue");
@@ -468,6 +471,17 @@ const routes = [
             component: BackendForumDiscussion,
           },
         ],
+      },
+
+      /*
+      |--------------------------------------------------------------------------
+      | Users Routes
+      |--------------------------------------------------------------------------
+      */
+      {
+        path: "users",
+        name: "users",
+        component: Users,
       },
 
       /*

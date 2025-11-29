@@ -122,6 +122,11 @@ export default {
       ],
     },
     {
+      name: "Users",
+      icon: "si si-users",
+      to: "users",
+    },
+    {
       name: "User Interface",
       heading: true,
     },
