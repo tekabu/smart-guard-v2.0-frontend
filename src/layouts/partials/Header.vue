@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useTemplateStore } from "@/stores/template";
+import { useAuthStore } from "@/stores/auth";
 
 // Grab example data
 import notifications from "@/data/notifications";
@@ -9,6 +10,7 @@ import notifications from "@/data/notifications";
 // Main store and Router
 const store = useTemplateStore();
 const router = useRouter();
+const authStore = useAuthStore();
 
 // Reactive variables
 const baseSearchTerm = ref("");
@@ -16,6 +18,16 @@ const baseSearchTerm = ref("");
 // On form search submit functionality
 function onSubmitSearch() {
   router.push("/backend/pages/generic/search?" + baseSearchTerm.value);
+}
+
+// Handle logout functionality
+async function handleLogout() {
+  try {
+    await authStore.logout();
+    router.push({ name: 'auth-signin' });
+  } catch (error) {
+    console.error('Logout failed:', error);
+  }
 }
 
 // When ESCAPE key is hit close the header search section
@@ -110,7 +122,7 @@ onUnmounted(() => {
                     alt="Header Avatar"
                     style="width: 21px"
                   />
-                  <span class="d-none d-sm-inline-block ms-2">John</span>
+                  <span class="d-none d-sm-inline-block ms-2">{{ authStore.user?.name }}</span>
                   <i
                     class="fa fa-fw fa-angle-down d-none d-sm-inline-block opacity-50 ms-1 mt-1"
                   ></i>
@@ -127,8 +139,8 @@ onUnmounted(() => {
                       src="/assets/media/avatars/avatar10.jpg"
                       alt="Header Avatar"
                     />
-                    <p class="mt-2 mb-0 fw-medium">John Smith</p>
-                    <p class="mb-0 text-muted fs-sm fw-medium">Web Developer</p>
+                    <p class="mt-2 mb-0 fw-medium">{{ authStore.user?.name }}</p>
+                    <p class="mb-0 text-muted fs-sm fw-medium">{{ authStore.user?.role }}</p>
                   </div>
                   <!-- <div class="p-2">
                     <a
@@ -160,12 +172,13 @@ onUnmounted(() => {
                     >
                       <span class="fs-sm fw-medium">Lock Account</span>
                     </RouterLink> -->
-                    <RouterLink
-                      :to="{ name: 'auth-signin' }"
+                    <a
+                      href="javascript:void(0)"
                       class="dropdown-item d-flex align-items-center justify-content-between"
+                      @click="handleLogout"
                     >
                       <span class="fs-sm fw-medium">Log Out</span>
-                    </RouterLink>
+                    </a>
                   </div>
                 </div>
               </div>
