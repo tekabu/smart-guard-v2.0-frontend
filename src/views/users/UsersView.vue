@@ -107,7 +107,9 @@ onMounted(() => {
 
 // Modal state
 const showEditModal = ref(false);
+const showDeleteModal = ref(false);
 const selectedUser = ref(null);
+const userToDelete = ref(null);
 
 // Edit user
 function editUser(user) {
@@ -128,6 +130,30 @@ function saveUser(updatedUser) {
     };
   }
   showEditModal.value = false;
+}
+
+// Show delete confirmation
+function confirmDelete(user) {
+  userToDelete.value = user;
+  showDeleteModal.value = true;
+}
+
+// Delete user
+function deleteUser() {
+  if (userToDelete.value) {
+    const index = users.findIndex((u) => u.id === userToDelete.value.id);
+    if (index !== -1) {
+      users.splice(index, 1);
+    }
+  }
+  showDeleteModal.value = false;
+  userToDelete.value = null;
+}
+
+// Cancel delete
+function cancelDelete() {
+  showDeleteModal.value = false;
+  userToDelete.value = null;
 }
 </script>
 
@@ -176,6 +202,28 @@ th.sort {
       opacity: 1;
     }
   }
+}
+
+.modal.show {
+  display: block;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+}
+
+.modal-backdrop.show {
+  opacity: 0.5;
+}
+
+.modal {
+  z-index: 1050;
 }
 </style>
 
@@ -247,6 +295,7 @@ th.sort {
                           <button
                             type="button"
                             class="btn btn-sm btn-alt-secondary"
+                            @click="confirmDelete(row)"
                             title="Delete User"
                           >
                             <i class="fa fa-fw fa-times"></i>
@@ -278,4 +327,51 @@ th.sort {
     @update:show="showEditModal = $event"
     @save="saveUser"
   />
+
+  <!-- Delete Confirmation Modal -->
+  <div
+    class="modal"
+    :class="{ show: showDeleteModal, 'd-block': showDeleteModal }"
+    tabindex="-1"
+    role="dialog"
+    @click.self="cancelDelete"
+  >
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Delete</h5>
+          <button
+            type="button"
+            class="btn-close"
+            @click="cancelDelete"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <p v-if="userToDelete">
+            Are you sure you want to delete user
+            <strong>{{ userToDelete.name }}</strong>?
+          </p>
+          <p class="text-muted mb-0">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="cancelDelete"
+          >
+            Cancel
+          </button>
+          <button type="button" class="btn btn-danger" @click="deleteUser">
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    v-if="showDeleteModal"
+    class="modal-backdrop fade"
+    :class="{ show: showDeleteModal }"
+  ></div>
 </template>
