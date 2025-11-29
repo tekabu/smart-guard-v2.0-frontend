@@ -155,7 +155,7 @@ onUnmounted(() => {
                   <div role="separator" class="dropdown-divider m-0"></div>
                   <div class="p-2">
                     <RouterLink
-                      :to="{ name: 'auth-lock' }"
+                      :to="{ name: 'auth-signin' }"
                       class="dropdown-item d-flex align-items-center justify-content-between"
                     >
                       <span class="fs-sm fw-medium">Lock Account</span>

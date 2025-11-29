@@ -60,7 +60,7 @@
       <div class="col-md-6 col-xxl-4">
         <!-- Lock Screen -->
         <RouterLink
-          :to="{ name: 'auth-lock' }"
+          :to="{ name: 'auth-signin' }"
           custom
           v-slot="{ href, navigate }"
         >
@@ -216,7 +216,7 @@
       <div class="col-md-6 col-xxl-4">
         <!-- Sign In -->
         <RouterLink
-          :to="{ name: 'auth-signin3' }"
+          :to="{ name: 'auth-signin' }"
           custom
           v-slot="{ href, navigate }"
         >
