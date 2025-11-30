@@ -1,5 +1,16 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
+import Swal from "sweetalert2";
+
+// Set default properties for SweetAlert2
+const toast = Swal.mixin({
+  buttonsStyling: false,
+  target: "#page-container",
+  customClass: {
+    confirmButton: "btn btn-success m-1",
+    cancelButton: "btn btn-danger m-1",
+  },
+});
 
 import {
   Dataset,
@@ -10,13 +21,14 @@ import {
   DatasetShow,
 } from "vue-dataset";
 
-import EditStudentModal from "./EditStudentModal.vue";
+import StudentFormModal from "./StudentFormModal.vue";
 import studentsService from "@/services/students";
 
 // Students data from API
 const students = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
+const pageSize = ref(10);
 
 // Filter state
 const activeFilter = ref(null);
@@ -168,33 +180,85 @@ const applyFilters = async () => {
 };
 
 // Modal state
-const showEditModal = ref(false);
+const showFormModal = ref(false);
 const showDeleteModal = ref(false);
-const showCreateModal = ref(false);
 const selectedStudent = ref(null);
 const studentToDelete = ref(null);
+const isEditMode = ref(false);
 
 // Edit student
 function editStudent(student) {
   selectedStudent.value = { ...student };
-  showEditModal.value = true;
+  isEditMode.value = true;
+  showFormModal.value = true;
 }
 
-// Save student
-async function saveStudent(updatedStudent) {
+// Add new student
+function addStudent() {
+  selectedStudent.value = null;
+  isEditMode.value = false;
+  showFormModal.value = true;
+}
+
+// Save student (for both create and update)
+async function saveStudent(studentData) {
   try {
-    const response = await studentsService.update(updatedStudent.id, updatedStudent);
-    
-    // Update student in local list
-    const index = students.value.findIndex((s) => s.id === updatedStudent.id);
-    if (index !== -1) {
-      students.value[index] = response.data;
+    if (isEditMode.value) {
+      // Update existing student
+      const response = await studentsService.update(studentData.id, studentData);
+      
+      // Update student in local list
+      const index = students.value.findIndex((s) => s.id === studentData.id);
+      if (index !== -1) {
+        students.value[index] = response.data;
+      }
+      
+      // Close modal first
+      showFormModal.value = false;
+      
+      // Show success message after the modal closes
+      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log('Showing update success toast');
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Student updated successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    } else {
+      // Create new student
+      const response = await studentsService.create(studentData);
+      
+      // Add new student to local list
+      students.value.unshift(response.data);
+      
+      // Close modal first
+      showFormModal.value = false;
+      
+      // Show success message after the modal closes
+      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log('Showing create success toast');
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Student created successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
-    
-    showEditModal.value = false;
   } catch (err) {
     console.error('Error saving student:', err);
-    alert('Failed to save student. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to save student',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -207,6 +271,7 @@ function confirmDelete(student) {
 // Delete student
 async function deleteStudent() {
   try {
+    const studentName = studentToDelete.value.name;
     await studentsService.delete(studentToDelete.value.id);
     
     // Remove student from local list
@@ -215,11 +280,31 @@ async function deleteStudent() {
       students.value.splice(index, 1);
     }
     
+    // Close modal and clear state
     showDeleteModal.value = false;
     studentToDelete.value = null;
+    
+    // Show success message after the modal closes
+    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log('Showing delete success toast');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Student deleted successfully',
+      showConfirmButton: false,
+      timer: 3000
+    });
   } catch (err) {
     console.error('Error deleting student:', err);
-    alert('Failed to delete student. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to delete student',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -242,7 +327,7 @@ function formatDate(dateString) {
     <template #extra>
       <button 
         class="btn btn-primary" 
-        @click="showCreateModal = true"
+        @click="addStudent"
       >
         <i class="fa fa-plus me-1"></i> Add New
       </button>
@@ -319,6 +404,7 @@ function formatDate(dateString) {
           :ds-data="students"
           :ds-sortby="sortBy"
           :ds-search-in="['name', 'email', 'student_id', 'course', 'department', 'active']"
+          :ds-page-size="pageSize"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
@@ -327,7 +413,7 @@ function formatDate(dateString) {
                 <select 
                   class="form-select" 
                   style="width: auto; min-width: 65px; max-width: 80px;"
-                  @input="ds.setPageCount($event.target.value)"
+                  v-model="pageSize"
                 >
                   <option value="10">10</option>
                   <option value="25">25</option>
@@ -413,11 +499,11 @@ function formatDate(dateString) {
   </div>
   <!-- END Page Content -->
 
-  <!-- Edit Student Modal -->
-  <EditStudentModal
+  <!-- Student Form Modal -->
+  <StudentFormModal
     :student="selectedStudent"
-    :show="showEditModal"
-    @update:show="showEditModal = $event"
+    :show="showFormModal"
+    @update:show="showFormModal = $event"
     @save="saveStudent"
   />
 

@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
+import Swal from "sweetalert2";
 
 import {
   Dataset,
@@ -17,6 +18,7 @@ import usersService from "@/services/users";
 const users = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
+const pageSize = ref(10);
 
 // Filter state
 const activeFilter = ref(null);
@@ -159,9 +161,27 @@ async function createUser(userData) {
       role: "STAFF",
       active: true,
     };
+    
+    // Show success message
+    await new Promise(resolve => setTimeout(resolve, 100));
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'User created successfully',
+      showConfirmButton: false,
+      timer: 3000
+    });
   } catch (err) {
     console.error('Error creating user:', err);
-    alert('Failed to create user. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to create user',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -183,9 +203,27 @@ async function saveUser(updatedUser) {
     }
     
     showEditModal.value = false;
+    
+    // Show success message
+    await new Promise(resolve => setTimeout(resolve, 100));
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'User updated successfully',
+      showConfirmButton: false,
+      timer: 3000
+    });
   } catch (err) {
     console.error('Error saving user:', err);
-    alert('Failed to save user. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to save user',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -198,6 +236,7 @@ function confirmDelete(user) {
 // Delete user
 async function deleteUser() {
   try {
+    const userName = userToDelete.value.name;
     await usersService.delete(userToDelete.value.id);
     
     // Remove user from local list
@@ -208,9 +247,28 @@ async function deleteUser() {
     
     showDeleteModal.value = false;
     userToDelete.value = null;
+    
+    // Show success message after a small delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log('Showing delete success toast for users');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'User deleted successfully',
+      showConfirmButton: false,
+      timer: 3000
+    });
   } catch (err) {
     console.error('Error deleting user:', err);
-    alert('Failed to delete user. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to delete user',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -369,6 +427,7 @@ th.sort {
           :ds-data="users"
           :ds-sortby="sortBy"
           :ds-search-in="['name', 'email', 'role', 'active']"
+          :ds-page-size="pageSize"
         >
         <div class="row" :data-page-count="ds.dsPagecount">
           <div class="col-md-6 py-2">
@@ -377,7 +436,7 @@ th.sort {
               <select 
                 class="form-select" 
                 style="width: auto; min-width: 65px; max-width: 80px;"
-                @input="ds.setPageCount($event.target.value)"
+                v-model="pageSize"
               >
                 <option value="10">10</option>
                 <option value="25">25</option>
