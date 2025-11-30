@@ -12,7 +12,6 @@ import {
 } from "vue-dataset";
 
 import ScheduleFormModal from "./ScheduleFormModal.vue";
-import SchedulePeriodsModal from "./SchedulePeriodsModal.vue";
 import SchedulePeriodsInline from "./SchedulePeriodsInline.vue";
 import schedulesService from "@/services/schedules";
 import facultyService from "@/services/faculty";
@@ -222,10 +221,6 @@ const selectedSchedule = ref(null);
 const scheduleToDelete = ref(null);
 const isEditMode = ref(false);
 
-// Schedule Periods Modal state
-const showPeriodsModal = ref(false);
-const selectedScheduleForPeriods = ref(null);
-
 // Expanded rows for periods
 const expandedRows = ref(new Set());
 
@@ -236,12 +231,6 @@ const togglePeriods = (scheduleId) => {
   } else {
     expandedRows.value.add(scheduleId);
   }
-};
-
-// Show periods modal
-const showPeriodsManagement = (schedule) => {
-  selectedScheduleForPeriods.value = schedule;
-  showPeriodsModal.value = true;
 };
 
 // Edit schedule
@@ -519,14 +508,6 @@ function formatDate(dateString) {
                             <button
                               type="button"
                               class="btn btn-sm btn-alt-secondary"
-                              @click="showPeriodsManagement(row)"
-                              title="Manage Periods"
-                            >
-                              <i class="fa fa-fw fa-list"></i>
-                            </button>
-                            <button
-                              type="button"
-                              class="btn btn-sm btn-alt-secondary"
                               @click="editSchedule(row)"
                               title="Edit Schedule"
                             >
@@ -589,13 +570,6 @@ function formatDate(dateString) {
     @save="saveSchedule"
   />
 
-  <!-- Schedule Periods Modal -->
-  <SchedulePeriodsModal
-    :show="showPeriodsModal"
-    :schedule-id="selectedScheduleForPeriods?.id"
-    @update:show="showPeriodsModal = $event"
-  />
-  
   <!-- Delete Confirmation Modal -->
   <div
     class="modal"
