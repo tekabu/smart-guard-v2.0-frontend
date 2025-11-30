@@ -13,6 +13,7 @@ import {
 } from "vue-dataset";
 
 import SectionSubjectStudentFormModal from "./SectionSubjectStudentFormModal.vue";
+import BulkAddStudentsModal from "./BulkAddStudentsModal.vue";
 import sectionSubjectStudentsService from "@/services/sectionSubjectStudents";
 import sectionSubjectsService from "@/services/sectionSubjects";
 import usersService from "@/services/users";
@@ -125,6 +126,7 @@ const fetchAllData = async () => {
 
 // Modal state
 const showEditModal = ref(false);
+const showBulkAddModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedSectionSubjectStudent = ref(null);
 const sectionSubjectStudentToDelete = ref(null);
@@ -142,6 +144,17 @@ function addSectionSubjectStudent() {
   selectedSectionSubjectStudent.value = null;
   isEditMode.value = false;
   showEditModal.value = true;
+}
+
+// Show bulk add modal
+function showBulkAdd() {
+  showBulkAddModal.value = true;
+}
+
+// Handle bulk add saved
+async function handleBulkSaved() {
+  // Refresh the list
+  await fetchAllData();
 }
 
 // Save section subject student (for both create and update)
@@ -223,12 +236,20 @@ function formatDate(dateString) {
   <!-- Hero -->
   <BasePageHeading title="Student Subject" subtitle="Manage student enrollments in section subjects.">
     <template #extra>
-      <button
-        class="btn btn-primary"
-        @click="addSectionSubjectStudent"
-      >
-        <i class="fa fa-plus me-1"></i> Add New
-      </button>
+      <div class="btn-group">
+        <button
+          class="btn btn-primary"
+          @click="addSectionSubjectStudent"
+        >
+          <i class="fa fa-plus me-1"></i> Add New
+        </button>
+        <button
+          class="btn btn-primary"
+          @click="showBulkAdd"
+        >
+          <i class="fa fa-users me-1"></i> Add Bulk
+        </button>
+      </div>
     </template>
   </BasePageHeading>
   <!-- END Hero -->
@@ -354,6 +375,15 @@ function formatDate(dateString) {
     :students="availableStudents"
     @update:show="showEditModal = $event"
     @save="saveSectionSubjectStudent"
+  />
+
+  <!-- Bulk Add Students Modal -->
+  <BulkAddStudentsModal
+    :show="showBulkAddModal"
+    :sectionSubjects="availableSectionSubjects"
+    :existingStudents="sectionSubjectStudents"
+    @update:show="showBulkAddModal = $event"
+    @saved="handleBulkSaved"
   />
 
   <!-- Delete Confirmation Modal -->
