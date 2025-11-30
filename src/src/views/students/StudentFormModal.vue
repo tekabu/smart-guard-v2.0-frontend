@@ -22,8 +22,6 @@ const formData = ref({
   id: null,
   name: "",
   email: "",
-  password: "",
-  password_confirmation: "",
   role: "STUDENT",
   active: true,
   student_id: "",
@@ -46,8 +44,6 @@ watch(
         id: newStudent.id,
         name: newStudent.name || "",
         email: newStudent.email || "",
-        password: "",
-        password_confirmation: "",
         role: "STUDENT",
         active: newStudent.active !== undefined ? newStudent.active : true,
         student_id: newStudent.student_id || "",
@@ -80,8 +76,6 @@ function resetForm() {
     id: null,
     name: "",
     email: "",
-    password: "",
-    password_confirmation: "",
     role: "STUDENT",
     active: true,
     student_id: "",
@@ -113,17 +107,7 @@ function validateForm() {
   if (!formData.value.student_id.trim()) {
     formErrors.value.student_id = "Student ID is required";
   }
-  
-  // Password validation (required for new students)
-  if (!isEditMode.value && !formData.value.password) {
-    formErrors.value.password = "Password is required for new students";
-  }
-  
-  // Password confirmation validation
-  if (formData.value.password && formData.value.password !== formData.value.password_confirmation) {
-    formErrors.value.password_confirmation = "Passwords do not match";
-  }
-  
+
   // Year level validation
   if (formData.value.year_level && (formData.value.year_level < 1 || formData.value.year_level > 6)) {
     formErrors.value.year_level = "Year level must be between 1 and 6";
@@ -146,16 +130,7 @@ function saveStudent() {
 
   // Prepare data for submission
   const dataToSave = { ...formData.value };
-  
-  // Remove password fields if they're empty (for editing)
-  if (isEditMode.value && !dataToSave.password) {
-    delete dataToSave.password;
-    delete dataToSave.password_confirmation;
-  }
-  
-  // Remove password_confirmation field as it's not needed in the API call
-  delete dataToSave.password_confirmation;
-  
+
   // Remove id if it's null (for creating new student)
   if (!dataToSave.id) {
     delete dataToSave.id;
@@ -239,61 +214,9 @@ function saveStudent() {
                   </div>
                 </div>
 
-                <!-- Course -->
-                <div class="mb-3">
-                  <label for="student-course" class="form-label">Course</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="student-course"
-                    autocomplete="organization-title"
-                    v-model="formData.course"
-                  />
-                </div>
               </div>
-              
+
               <div class="col-md-6">
-                <!-- Password -->
-                <div class="mb-3">
-                  <label for="student-password" class="form-label">
-                    Password <span v-if="!isEditMode" class="text-danger">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    class="form-control"
-                    :class="{ 'is-invalid': formErrors.password }"
-                    id="student-password"
-                    autocomplete="new-password"
-                    v-model="formData.password"
-                    :placeholder="isEditMode ? 'Leave blank to keep current password' : ''"
-                  />
-                  <small v-if="isEditMode" class="form-text text-muted"
-                    >Leave blank to keep current password</small
-                  >
-                  <div v-if="formErrors.password" class="invalid-feedback">
-                    {{ formErrors.password }}
-                  </div>
-                </div>
-
-                <!-- Confirm Password -->
-                <div class="mb-3">
-                  <label for="student-confirm-password" class="form-label">
-                    Confirm Password <span v-if="formData.password" class="text-danger">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    class="form-control"
-                    :class="{ 'is-invalid': formErrors.password_confirmation }"
-                    id="student-confirm-password"
-                    autocomplete="new-password"
-                    v-model="formData.password_confirmation"
-                    placeholder="Confirm new password"
-                  />
-                  <div v-if="formErrors.password_confirmation" class="invalid-feedback">
-                    {{ formErrors.password_confirmation }}
-                  </div>
-                </div>
-
                 <!-- Year Level -->
                 <div class="mb-3">
                   <label for="student-year" class="form-label">Year Level</label>
@@ -321,6 +244,18 @@ function saveStudent() {
                     id="student-department"
                     autocomplete="organization"
                     v-model="formData.department"
+                  />
+                </div>
+
+                <!-- Course -->
+                <div class="mb-3">
+                  <label for="student-course" class="form-label">Course</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="student-course"
+                    autocomplete="organization-title"
+                    v-model="formData.course"
                   />
                 </div>
               </div>

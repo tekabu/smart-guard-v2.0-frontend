@@ -22,8 +22,6 @@ const formData = ref({
   id: null,
   name: "",
   email: "",
-  password: "",
-  password_confirmation: "",
   role: "FACULTY",
   active: true,
   faculty_id: "",
@@ -43,8 +41,6 @@ watch(
         id: newFaculty.id,
         name: newFaculty.name || "",
         email: newFaculty.email || "",
-        password: "",
-        password_confirmation: "",
         role: "FACULTY",
         active: newFaculty.active !== undefined ? newFaculty.active : true,
         faculty_id: newFaculty.faculty_id || "",
@@ -74,8 +70,6 @@ function resetForm() {
     id: null,
     name: "",
     email: "",
-    password: "",
-    password_confirmation: "",
     role: "FACULTY",
     active: true,
     faculty_id: "",
@@ -104,17 +98,7 @@ function validateForm() {
   if (!formData.value.faculty_id.trim()) {
     formErrors.value.faculty_id = "Faculty ID is required";
   }
-  
-  // Password validation (required for new faculty)
-  if (!isEditMode.value && !formData.value.password) {
-    formErrors.value.password = "Password is required for new faculty";
-  }
-  
-  // Password confirmation validation
-  if (formData.value.password && formData.value.password !== formData.value.password_confirmation) {
-    formErrors.value.password_confirmation = "Passwords do not match";
-  }
-  
+
   return Object.keys(formErrors.value).length === 0;
 }
 
@@ -132,16 +116,7 @@ function saveFacultyMember() {
 
   // Prepare data for submission
   const dataToSave = { ...formData.value };
-  
-  // Remove password fields if they're empty (for editing)
-  if (isEditMode.value && !dataToSave.password) {
-    delete dataToSave.password;
-    delete dataToSave.password_confirmation;
-  }
-  
-  // Remove password_confirmation field as it's not needed in the API call
-  delete dataToSave.password_confirmation;
-  
+
   // Remove id if it's null (for creating new faculty)
   if (!dataToSave.id) {
     delete dataToSave.id;
@@ -209,6 +184,21 @@ function saveFacultyMember() {
                   </div>
                 </div>
 
+              </div>
+
+              <div class="col-md-6">
+                <!-- Department -->
+                <div class="mb-3">
+                  <label for="faculty-department" class="form-label">Department</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="faculty-department"
+                    autocomplete="organization"
+                    v-model="formData.department"
+                  />
+                </div>
+
                 <!-- Faculty ID -->
                 <div class="mb-3">
                   <label for="faculty-id" class="form-label">Faculty ID <span class="text-danger">*</span></label>
@@ -224,61 +214,6 @@ function saveFacultyMember() {
                   <div v-if="formErrors.faculty_id" class="invalid-feedback">
                     {{ formErrors.faculty_id }}
                   </div>
-                </div>
-              </div>
-              
-              <div class="col-md-6">
-                <!-- Password -->
-                <div class="mb-3">
-                  <label for="faculty-password" class="form-label">
-                    Password <span v-if="!isEditMode" class="text-danger">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    class="form-control"
-                    :class="{ 'is-invalid': formErrors.password }"
-                    id="faculty-password"
-                    autocomplete="new-password"
-                    v-model="formData.password"
-                    :placeholder="isEditMode ? 'Leave blank to keep current password' : ''"
-                  />
-                  <small v-if="isEditMode" class="form-text text-muted"
-                    >Leave blank to keep current password</small
-                  >
-                  <div v-if="formErrors.password" class="invalid-feedback">
-                    {{ formErrors.password }}
-                  </div>
-                </div>
-
-                <!-- Confirm Password -->
-                <div class="mb-3">
-                  <label for="faculty-confirm-password" class="form-label">
-                    Confirm Password <span v-if="formData.password" class="text-danger">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    class="form-control"
-                    :class="{ 'is-invalid': formErrors.password_confirmation }"
-                    id="faculty-confirm-password"
-                    autocomplete="new-password"
-                    v-model="formData.password_confirmation"
-                    placeholder="Confirm new password"
-                  />
-                  <div v-if="formErrors.password_confirmation" class="invalid-feedback">
-                    {{ formErrors.password_confirmation }}
-                  </div>
-                </div>
-
-                <!-- Department -->
-                <div class="mb-3">
-                  <label for="faculty-department" class="form-label">Department</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="faculty-department"
-                    autocomplete="organization"
-                    v-model="formData.department"
-                  />
                 </div>
               </div>
             </div>
