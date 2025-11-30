@@ -215,7 +215,6 @@ function formatDate(dateString) {
                     :class="{ 'is-invalid': formErrors.fingerprint_id }"
                     id="fingerprint-id"
                     v-model="formData.fingerprint_id"
-                    :disabled="isEditMode"
                     required
                   />
                   <div v-if="formErrors.fingerprint_id" class="invalid-feedback">

@@ -215,7 +215,6 @@ function formatDate(dateString) {
                     :class="{ 'is-invalid': formErrors.card_id }"
                     id="card-id"
                     v-model="formData.card_id"
-                    :disabled="isEditMode"
                     required
                   />
                   <div v-if="formErrors.card_id" class="invalid-feedback">
