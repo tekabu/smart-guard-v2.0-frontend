@@ -18,6 +18,15 @@ const students = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
 
+// Filter state
+const activeFilter = ref(null);
+const courseFilter = ref(null);
+const departmentFilter = ref(null);
+
+// Dynamic filter options
+const availableCourses = ref([]);
+const availableDepartments = ref([]);
+
 // Helper variables
 const cols = reactive([
   {
@@ -41,8 +50,23 @@ const cols = reactive([
     sort: "",
   },
   {
+    name: "Department",
+    field: "department",
+    sort: "",
+  },
+  {
     name: "Year",
     field: "year_level",
+    sort: "",
+  },
+  {
+    name: "Status",
+    field: "active",
+    sort: "",
+  },
+  {
+    name: "Last Updated",
+    field: "updated_at",
     sort: "",
   },
 ]);
@@ -85,23 +109,59 @@ function onSort(event, i) {
   sortEl.sort = toset;
 }
 
+// Reset filters
+const resetFilters = () => {
+  activeFilter.value = null;
+  courseFilter.value = null;
+  departmentFilter.value = null;
+  applyFilters();
+};
+
 // Apply a few Bootstrap 5 optimizations
 onMounted(() => {
   // Fetch students on component mount
-  fetchStudents();
+  applyFilters();
 });
 
-// Fetch students from API
-const fetchStudents = async () => {
+// Apply filters
+const applyFilters = async () => {
   try {
     isLoading.value = true;
     error.value = null;
     
     const response = await studentsService.getAll();
-    students.value = response.data;
+    let filteredData = response.data;
+    
+    // Extract unique courses and departments from API data
+    const allCourses = [...new Set(response.data
+      .map(student => student.course)
+      .filter(course => course))];
+    const allDepartments = [...new Set(response.data
+      .map(student => student.department)
+      .filter(dept => dept))];
+    
+    availableCourses.value = allCourses.sort();
+    availableDepartments.value = allDepartments.sort();
+    
+    // Apply active filter
+    if (activeFilter.value !== null) {
+      filteredData = filteredData.filter(student => student.active === activeFilter.value);
+    }
+    
+    // Apply course filter
+    if (courseFilter.value) {
+      filteredData = filteredData.filter(student => student.course === courseFilter.value);
+    }
+    
+    // Apply department filter
+    if (departmentFilter.value) {
+      filteredData = filteredData.filter(student => student.department === departmentFilter.value);
+    }
+    
+    students.value = filteredData;
   } catch (err) {
-    console.error('Error fetching students:', err);
-    error.value = 'Failed to load students. Please try again.';
+    console.error('Error applying filters:', err);
+    error.value = 'Failed to apply filters. Please try again.';
   } finally {
     isLoading.value = false;
   }
@@ -110,6 +170,7 @@ const fetchStudents = async () => {
 // Modal state
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
+const showCreateModal = ref(false);
 const selectedStudent = ref(null);
 const studentToDelete = ref(null);
 
@@ -167,16 +228,76 @@ function cancelDelete() {
   showDeleteModal.value = false;
   studentToDelete.value = null;
 }
+
+// Format date
+function formatDate(dateString) {
+  if (!dateString) return '-';
+  return new Date(dateString).toLocaleString();
+}
 </script>
 
 <template>
   <!-- Hero -->
   <BasePageHeading title="Students" subtitle="Manage student records and information.">
+    <template #extra>
+      <button 
+        class="btn btn-primary" 
+        @click="showCreateModal = true"
+      >
+        <i class="fa fa-plus me-1"></i> Add New
+      </button>
+    </template>
   </BasePageHeading>
   <!-- END Hero -->
 
   <!-- Page Content -->
   <div class="content">
+    <!-- Filters -->
+    <BaseBlock title="Filters" content-full>
+      <div class="row">
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" v-model="activeFilter" @change="applyFilters">
+            <option :value="null">All Status</option>
+            <option :value="true">Active</option>
+            <option :value="false">Inactive</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Course</label>
+          <select class="form-select" v-model="courseFilter" @change="applyFilters">
+            <option :value="null">All Courses</option>
+            <option
+              v-for="course in availableCourses"
+              :key="course"
+              :value="course"
+            >
+              {{ course }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Department</label>
+          <select class="form-select" v-model="departmentFilter" @change="applyFilters">
+            <option :value="null">All Departments</option>
+            <option
+              v-for="department in availableDepartments"
+              :key="department"
+              :value="department"
+            >
+              {{ department }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-secondary w-100" @click="resetFilters">
+            <i class="fa fa-undo me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+    </BaseBlock>
+
     <BaseBlock title="Student List" content-full>
       <!-- Loading state -->
       <div v-if="isLoading" class="text-center py-5">
@@ -197,7 +318,7 @@ function cancelDelete() {
           v-slot="{ ds }"
           :ds-data="students"
           :ds-sortby="sortBy"
-          :ds-search-in="['name', 'email', 'student_id', 'course']"
+          :ds-search-in="['name', 'email', 'student_id', 'course', 'department', 'active']"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
@@ -245,7 +366,14 @@ function cancelDelete() {
                         <td style="min-width: 150px">{{ row.name }}</td>
                         <td>{{ row.email }}</td>
                         <td>{{ row.course || '-' }}</td>
+                        <td>{{ row.department || '-' }}</td>
                         <td>{{ row.year_level || '-' }}</td>
+                        <td>
+                          <span :class="['badge', row.active ? 'bg-success' : 'bg-danger']">
+                            {{ row.active ? 'Active' : 'Inactive' }}
+                          </span>
+                        </td>
+                        <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">
                           <div class="btn-group">
                             <button

@@ -28,12 +28,12 @@ export default {
     },
     {
       name: "Devices",
-      icon: "si si-laptop",
+      icon: "si si-screen-desktop",
       to: "devices",
     },
     {
       name: "Device Boards",
-      icon: "si si-cpu",
+      icon: "si si-wallet",
       to: "deviceBoards",
     },
     {

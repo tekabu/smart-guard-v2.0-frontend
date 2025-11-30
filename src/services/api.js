@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '@/stores/auth';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -40,8 +41,15 @@ api.interceptors.response.use(
       // Server responded with error status
       switch (error.response.status) {
         case 401:
-          // Unauthorized - redirect to login
-          console.error('Unauthorized');
+          // Unauthorized - clear auth and redirect to login
+          console.error('Unauthorized - Logging out');
+          const authStore = useAuthStore();
+          authStore.clearAuth();
+          
+          // Only redirect if not already on login page
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
           break;
         case 419:
           // CSRF token mismatch

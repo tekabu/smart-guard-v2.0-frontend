@@ -18,6 +18,10 @@ const users = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
 
+// Filter state
+const activeFilter = ref(null);
+const roleFilter = ref(null);
+
 // Helper variables
 const cols = reactive([
   {
@@ -35,22 +39,43 @@ const cols = reactive([
     field: "role",
     sort: "",
   },
+  {
+    name: "Status",
+    field: "active",
+    sort: "",
+  },
+  {
+    name: "Last Updated",
+    field: "updated_at",
+    sort: "",
+  },
 ]);
 
-// Fetch users from API
-const fetchUsers = async () => {
+// Apply active filter
+const applyActiveFilter = async () => {
   try {
     isLoading.value = true;
     error.value = null;
     
-    // Get only ADMIN and STAFF users
     const response = await usersService.getAll();
-    users.value = response.data.filter(user => 
+    let filteredData = response.data.filter(user => 
       user.role === 'ADMIN' || user.role === 'STAFF'
     );
+    
+    // Apply active filter
+    if (activeFilter.value !== null) {
+      filteredData = filteredData.filter(user => user.active === activeFilter.value);
+    }
+    
+    // Apply role filter
+    if (roleFilter.value) {
+      filteredData = filteredData.filter(user => user.role === roleFilter.value);
+    }
+    
+    users.value = filteredData;
   } catch (err) {
-    console.error('Error fetching users:', err);
-    error.value = 'Failed to load users. Please try again.';
+    console.error('Error applying filter:', err);
+    error.value = 'Failed to apply filter. Please try again.';
   } finally {
     isLoading.value = false;
   }
@@ -97,14 +122,48 @@ function onSort(event, i) {
 // Apply a few Bootstrap 5 optimizations
 onMounted(() => {
   // Fetch users on component mount
-  fetchUsers();
+  applyActiveFilter();
 });
 
 // Modal state
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
+const showCreateModal = ref(false);
 const selectedUser = ref(null);
 const userToDelete = ref(null);
+
+// New user form data
+const newUser = ref({
+  name: "",
+  email: "",
+  password: "",
+  role: "STAFF",
+  active: true,
+});
+
+// Create new user
+async function createUser(userData) {
+  try {
+    const response = await usersService.create(userData);
+    
+    // Add new user to local list
+    users.value.push(response.data);
+    
+    showCreateModal.value = false;
+    
+    // Reset form
+    newUser.value = {
+      name: "",
+      email: "",
+      password: "",
+      role: "STAFF",
+      active: true,
+    };
+  } catch (err) {
+    console.error('Error creating user:', err);
+    alert('Failed to create user. Please try again.');
+  }
+}
 
 // Edit user
 function editUser(user) {
@@ -159,6 +218,19 @@ async function deleteUser() {
 function cancelDelete() {
   showDeleteModal.value = false;
   userToDelete.value = null;
+}
+
+// Reset filters
+const resetFilters = () => {
+  activeFilter.value = null;
+  roleFilter.value = null;
+  applyActiveFilter();
+};
+
+// Format date
+function formatDate(dateString) {
+  if (!dateString) return '-';
+  return new Date(dateString).toLocaleString();
 }
 </script>
 
@@ -235,18 +307,47 @@ th.sort {
 <template>
   <!-- Hero -->
   <BasePageHeading title="Users" subtitle="Manage application users.">
-    <!-- <template #extra>
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb breadcrumb-alt">
-          <li class="breadcrumb-item" aria-current="page">Users</li>
-        </ol>
-      </nav>
-    </template> -->
+    <template #extra>
+      <button 
+        class="btn btn-primary" 
+        @click="showCreateModal = true"
+      >
+        <i class="fa fa-plus me-1"></i> Add New
+      </button>
+    </template>
   </BasePageHeading>
   <!-- END Hero -->
 
   <!-- Page Content -->
   <div class="content">
+    <!-- Active Filter -->
+    <BaseBlock title="Filters" content-full>
+      <div class="row">
+        <div class="col-md-3">
+          <label class="form-label">Role</label>
+          <select class="form-select" v-model="roleFilter" @change="applyActiveFilter">
+            <option :value="null">All Roles</option>
+            <option value="ADMIN">ADMIN</option>
+            <option value="STAFF">STAFF</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" v-model="activeFilter" @change="applyActiveFilter">
+            <option :value="null">All Status</option>
+            <option :value="true">Active</option>
+            <option :value="false">Inactive</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-secondary w-100" @click="activeFilter = null; roleFilter = null; applyActiveFilter()">
+            <i class="fa fa-undo me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+    </BaseBlock>
+
     <BaseBlock title="User List" content-full>
       <!-- Loading state -->
       <div v-if="isLoading" class="text-center py-5">
@@ -267,7 +368,7 @@ th.sort {
           v-slot="{ ds }"
           :ds-data="users"
           :ds-sortby="sortBy"
-          :ds-search-in="['name', 'email', 'role']"
+          :ds-search-in="['name', 'email', 'role', 'active']"
         >
         <div class="row" :data-page-count="ds.dsPagecount">
           <div class="col-md-6 py-2">
@@ -318,6 +419,12 @@ th.sort {
                       <td>
                         <span class="badge bg-primary">{{ row.role }}</span>
                       </td>
+                      <td>
+                        <span :class="['badge', row.active ? 'bg-success' : 'bg-danger']">
+                          {{ row.active ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                      <td>{{ formatDate(row.updated_at) }}</td>
                       <td class="text-center">
                         <div class="btn-group">
                           <button
@@ -364,6 +471,90 @@ th.sort {
     @update:show="showEditModal = $event"
     @save="saveUser"
   />
+
+  <!-- Create User Modal -->
+  <div
+    class="modal"
+    :class="{ show: showCreateModal, 'd-block': showCreateModal }"
+    tabindex="-1"
+    role="dialog"
+    @click.self="showCreateModal = false"
+  >
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create New User</h5>
+          <button
+            type="button"
+            class="btn-close"
+            @click="showCreateModal = false"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="createUser({name: '', email: '', password: '', role: 'STAFF', active: true})">
+            <div class="mb-3">
+              <label for="new-name" class="form-label">Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="new-name"
+                autocomplete="name"
+                v-model="newUser.name"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="new-email" class="form-label">Email</label>
+              <input
+                type="email"
+                class="form-control"
+                id="new-email"
+                autocomplete="username"
+                v-model="newUser.email"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="new-password" class="form-label">Password</label>
+              <input
+                type="password"
+                class="form-control"
+                id="new-password"
+                autocomplete="new-password"
+                v-model="newUser.password"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="new-role" class="form-label">Role</label>
+              <select class="form-select" id="new-role" v-model="newUser.role" required>
+                <option value="ADMIN">ADMIN</option>
+                <option value="STAFF">STAFF</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="showCreateModal = false"
+          >
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" @click="createUser(newUser)">
+            Create User
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    v-if="showCreateModal"
+    class="modal-backdrop fade"
+    :class="{ show: showCreateModal }"
+  ></div>
 
   <!-- Delete Confirmation Modal -->
   <div

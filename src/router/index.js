@@ -215,7 +215,13 @@ router.beforeEach(async (to, from, next) => {
   // If route requires auth and user is not authenticated
   if (!isPublicRoute && !authStore.isAuthenticated) {
     // Try to fetch user (in case they have a valid session)
-    await authStore.fetchUser();
+    try {
+      await authStore.fetchUser();
+    } catch (error) {
+      // If fetch fails, clear auth and redirect to login
+      authStore.clearAuth();
+      console.warn('Authentication check failed:', error);
+    }
 
     // If still not authenticated, redirect to login
     if (!authStore.isAuthenticated) {

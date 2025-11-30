@@ -21,6 +21,7 @@ const formData = ref({
   email: "",
   password: "",
   confirmPassword: "",
+  role: "STAFF",
   active: true,
 });
 
@@ -35,6 +36,7 @@ watch(
         email: newUser.email,
         password: "",
         confirmPassword: "",
+        role: newUser.role || "STAFF",
         active: newUser.active !== undefined ? newUser.active : true,
       };
     }
@@ -137,6 +139,20 @@ function saveUser() {
                 v-model="formData.confirmPassword"
                 placeholder="Confirm new password"
               />
+            </div>
+
+            <!-- Role -->
+            <div class="mb-3">
+              <label for="user-role" class="form-label">Role</label>
+              <select 
+                class="form-select" 
+                id="user-role"
+                v-model="formData.role"
+                required
+              >
+                <option value="ADMIN">ADMIN</option>
+                <option value="STAFF">STAFF</option>
+              </select>
             </div>
 
             <!-- Active Toggle -->

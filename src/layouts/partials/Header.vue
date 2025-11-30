@@ -23,10 +23,22 @@ function onSubmitSearch() {
 // Handle logout functionality
 async function handleLogout() {
   try {
+    // Close the dropdown
+    document.getElementById('page-header-user-dropdown')?.click();
+    
+    // Perform logout
     await authStore.logout();
-    router.push({ name: 'auth-signin' });
+    
+    // Redirect to login (only if not already on login page)
+    if (router.currentRoute.value.name !== 'auth-signin') {
+      router.push({ name: 'auth-signin' });
+    }
   } catch (error) {
     console.error('Logout failed:', error);
+    // Even if logout fails, we should still try to redirect
+    if (router.currentRoute.value.name !== 'auth-signin') {
+      router.push({ name: 'auth-signin' });
+    }
   }
 }
 

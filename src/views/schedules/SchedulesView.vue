@@ -21,6 +21,9 @@ const schedules = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
 
+// Filter state
+const activeFilter = ref(null);
+
 // Reference data
 const facultyList = ref([]);
 const roomList = ref([]);
@@ -39,6 +42,11 @@ const cols = reactive([
     sort: "",
   },
   {
+    name: "Time",
+    field: "start_time",
+    sort: "",
+  },
+  {
     name: "Room",
     field: "room.room_number",
     sort: "",
@@ -46,6 +54,16 @@ const cols = reactive([
   {
     name: "Subject",
     field: "subject.subject",
+    sort: "",
+  },
+  {
+    name: "Status",
+    field: "active",
+    sort: "",
+  },
+  {
+    name: "Last Updated",
+    field: "updated_at",
     sort: "",
   },
 ]);
@@ -91,7 +109,7 @@ function onSort(event, i) {
 // Apply a few Bootstrap 5 optimizations
 onMounted(() => {
   // Fetch data on component mount
-  fetchAllData();
+  applyFilters();
 });
 
 // Fetch all required data
@@ -120,9 +138,50 @@ const fetchAllData = async () => {
   }
 };
 
+// Apply filters
+const applyFilters = async () => {
+  try {
+    isLoading.value = true;
+    error.value = null;
+    
+    const response = await schedulesService.getAll();
+    let filteredData = response.data;
+    
+    // Apply active filter
+    if (activeFilter.value !== null) {
+      filteredData = filteredData.filter(schedule => schedule.active === activeFilter.value);
+    }
+    
+    schedules.value = filteredData;
+    
+    // Still fetch reference data
+    const [facultyRes, roomsRes, subjectsRes] = await Promise.all([
+      facultyService.getAll(),
+      roomsService.getAll(),
+      subjectsService.getAll()
+    ]);
+    
+    facultyList.value = facultyRes.data.filter(f => f.active);
+    roomList.value = roomsRes.data.filter(r => r.active);
+    subjectList.value = subjectsRes.data.filter(s => s.active);
+  } catch (err) {
+    console.error('Error applying filters:', err);
+    error.value = 'Failed to apply filters. Please try again.';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Reset filters
+const resetFilters = () => {
+  activeFilter.value = null;
+  applyFilters();
+};
+
 // Modal state
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
+const showCreateModal = ref(false);
 const selectedSchedule = ref(null);
 const scheduleToDelete = ref(null);
 
@@ -185,16 +244,50 @@ function cancelDelete() {
 const getFacultyName = (user) => user?.name || 'Unknown';
 const getRoomNumber = (room) => room?.room_number || 'Unknown';
 const getSubjectName = (subject) => subject?.subject || 'Unknown';
+
+// Format date
+function formatDate(dateString) {
+  if (!dateString) return '-';
+  return new Date(dateString).toLocaleString();
+}
 </script>
 
 <template>
   <!-- Hero -->
   <BasePageHeading title="Schedules" subtitle="Manage faculty teaching schedules.">
+    <template #extra>
+      <button 
+        class="btn btn-primary" 
+        @click="showCreateModal = true"
+      >
+        <i class="fa fa-plus me-1"></i> Add New
+      </button>
+    </template>
   </BasePageHeading>
   <!-- END Hero -->
 
   <!-- Page Content -->
   <div class="content">
+    <!-- Filters -->
+    <BaseBlock title="Filters" content-full>
+      <div class="row">
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" v-model="activeFilter" @change="applyFilters">
+            <option :value="null">All Status</option>
+            <option :value="true">Active</option>
+            <option :value="false">Inactive</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-secondary w-100" @click="resetFilters()">
+            <i class="fa fa-undo me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+    </BaseBlock>
+
     <BaseBlock title="Schedule List" content-full>
       <!-- Loading state -->
       <div v-if="isLoading" class="text-center py-5">
@@ -215,7 +308,7 @@ const getSubjectName = (subject) => subject?.subject || 'Unknown';
           v-slot="{ ds }"
           :ds-data="schedules"
           :ds-sortby="sortBy"
-          :ds-search-in="['user.name', 'day_of_week', 'room.room_number', 'subject.subject']"
+          :ds-search-in="['user.name', 'day_of_week', 'room.room_number', 'subject.subject', 'active']"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
@@ -261,8 +354,15 @@ const getSubjectName = (subject) => subject?.subject || 'Unknown';
                       <tr>
                         <td style="min-width: 150px">{{ getFacultyName(row.user) }}</td>
                         <td>{{ row.day_of_week }}</td>
+                        <td>{{ row.start_time || '-' }} - {{ row.end_time || '-' }}</td>
                         <td>{{ getRoomNumber(row.room) }}</td>
                         <td>{{ getSubjectName(row.subject) }}</td>
+                        <td>
+                          <span :class="['badge', row.active ? 'bg-success' : 'bg-danger']">
+                            {{ row.active ? 'Active' : 'Inactive' }}
+                          </span>
+                        </td>
+                        <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">
                           <div class="btn-group">
                             <button

@@ -18,6 +18,9 @@ const devices = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
 
+// Filter state
+const activeFilter = ref(null);
+
 // Helper variables
 const cols = reactive([
   {
@@ -38,6 +41,11 @@ const cols = reactive([
   {
     name: "Last Accessed",
     field: "last_accessed_at",
+    sort: "",
+  },
+  {
+    name: "Last Updated",
+    field: "updated_at",
     sort: "",
   },
 ]);
@@ -83,7 +91,7 @@ function onSort(event, i) {
 // Apply a few Bootstrap 5 optimizations
 onMounted(() => {
   // Fetch devices on component mount
-  fetchDevices();
+  applyFilters();
 });
 
 // Fetch devices from API
@@ -102,9 +110,39 @@ const fetchDevices = async () => {
   }
 };
 
+// Apply filters
+const applyFilters = async () => {
+  try {
+    isLoading.value = true;
+    error.value = null;
+    
+    const response = await devicesService.getAll();
+    let filteredData = response.data;
+    
+    // Apply active filter
+    if (activeFilter.value !== null) {
+      filteredData = filteredData.filter(device => device.active === activeFilter.value);
+    }
+    
+    devices.value = filteredData;
+  } catch (err) {
+    console.error('Error applying filters:', err);
+    error.value = 'Failed to apply filters. Please try again.';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Reset filters
+const resetFilters = () => {
+  activeFilter.value = null;
+  applyFilters();
+};
+
 // Modal state
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
+const showCreateModal = ref(false);
 const selectedDevice = ref(null);
 const deviceToDelete = ref(null);
 
@@ -173,11 +211,39 @@ function formatDate(dateString) {
 <template>
   <!-- Hero -->
   <BasePageHeading title="Devices" subtitle="Manage door lock devices and hardware.">
+    <template #extra>
+      <button 
+        class="btn btn-primary" 
+        @click="showCreateModal = true"
+      >
+        <i class="fa fa-plus me-1"></i> Add New
+      </button>
+    </template>
   </BasePageHeading>
   <!-- END Hero -->
 
   <!-- Page Content -->
   <div class="content">
+    <!-- Filters -->
+    <BaseBlock title="Filters" content-full>
+      <div class="row">
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" v-model="activeFilter" @change="applyFilters">
+            <option :value="null">All Status</option>
+            <option :value="true">Active</option>
+            <option :value="false">Inactive</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-secondary w-100" @click="resetFilters()">
+            <i class="fa fa-undo me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+    </BaseBlock>
+
     <BaseBlock title="Device List" content-full>
       <!-- Loading state -->
       <div v-if="isLoading" class="text-center py-5">
@@ -198,7 +264,7 @@ function formatDate(dateString) {
           v-slot="{ ds }"
           :ds-data="devices"
           :ds-sortby="sortBy"
-          :ds-search-in="['device_id', 'door_open_duration_seconds']"
+          :ds-search-in="['device_id', 'door_open_duration_seconds', 'active']"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
@@ -250,6 +316,7 @@ function formatDate(dateString) {
                           </span>
                         </td>
                         <td>{{ formatDate(row.last_accessed_at) }}</td>
+                        <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">
                           <div class="btn-group">
                             <button

@@ -22,14 +22,8 @@ const error = ref(null);
 // Available devices
 const availableDevices = ref([]);
 
-// Board types
-const boardTypes = [
-  "FINGERPRINT",
-  "RFID", 
-  "LOCK",
-  "CAMERA",
-  "DISPLAY"
-];
+// Dynamic board types from API
+const availableBoardTypes = ref([]);
 
 // Filters
 const filters = ref({
@@ -51,18 +45,13 @@ const cols = reactive([
     sort: "",
   },
   {
-    name: "MAC Address",
-    field: "mac_address",
-    sort: "",
-  },
-  {
     name: "Status",
     field: "active",
     sort: "",
   },
   {
-    name: "Firmware",
-    field: "firmware_version",
+    name: "Last Updated",
+    field: "updated_at",
     sort: "",
   },
 ]);
@@ -125,6 +114,13 @@ const fetchAllData = async () => {
     
     deviceBoards.value = boardsRes.data;
     availableDevices.value = devicesRes.data.filter(device => device.active);
+    
+    // Extract unique board types from API data
+    const allBoardTypes = [...new Set(boardsRes.data
+      .map(board => board.board_type)
+      .filter(type => type))];
+    
+    availableBoardTypes.value = allBoardTypes.sort();
   } catch (err) {
     console.error('Error fetching device boards:', err);
     error.value = 'Failed to load device boards. Please try again.';
@@ -133,7 +129,7 @@ const fetchAllData = async () => {
   }
 };
 
-// Apply filters
+// Apply filters (now automatic on change)
 const applyFilters = async () => {
   try {
     isLoading.value = true;
@@ -167,6 +163,7 @@ const resetFilters = () => {
 // Modal state
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
+const showCreateModal = ref(false);
 const selectedBoard = ref(null);
 const boardToDelete = ref(null);
 
@@ -224,11 +221,25 @@ function cancelDelete() {
   showDeleteModal.value = false;
   boardToDelete.value = null;
 }
+
+// Format date
+function formatDate(dateString) {
+  if (!dateString) return '-';
+  return new Date(dateString).toLocaleString();
+}
 </script>
 
 <template>
   <!-- Hero -->
   <BasePageHeading title="Device Boards" subtitle="Manage ESP32 boards and hardware components.">
+    <template #extra>
+      <button 
+        class="btn btn-primary" 
+        @click="showCreateModal = true"
+      >
+        <i class="fa fa-plus me-1"></i> Add New
+      </button>
+    </template>
   </BasePageHeading>
   <!-- END Hero -->
 
@@ -255,7 +266,7 @@ function cancelDelete() {
           <select class="form-select" v-model="filters.board_type" @change="applyFilters">
             <option :value="null">All Types</option>
             <option
-              v-for="type in boardTypes"
+              v-for="type in availableBoardTypes"
               :key="type"
               :value="type"
             >
@@ -273,14 +284,9 @@ function cancelDelete() {
         </div>
         <div class="col-md-3">
           <label class="form-label">&nbsp;</label>
-          <div class="d-grid gap-2">
-            <button class="btn btn-primary" @click="applyFilters">
-              <i class="fa fa-filter me-1"></i> Apply Filters
-            </button>
-            <button class="btn btn-secondary" @click="resetFilters">
-              <i class="fa fa-undo me-1"></i> Reset
-            </button>
-          </div>
+          <button class="btn btn-secondary w-100" @click="resetFilters">
+            <i class="fa fa-undo me-1"></i> Reset
+          </button>
         </div>
       </div>
     </BaseBlock>
@@ -305,7 +311,7 @@ function cancelDelete() {
           v-slot="{ ds }"
           :ds-data="deviceBoards"
           :ds-sortby="sortBy"
-          :ds-search-in="['device.device_id', 'board_type', 'mac_address', 'firmware_version']"
+          :ds-search-in="['device.device_id', 'board_type', 'active']"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
@@ -353,13 +359,12 @@ function cancelDelete() {
                         <td>
                           <span class="badge bg-info">{{ row.board_type }}</span>
                         </td>
-                        <td><code>{{ row.mac_address }}</code></td>
                         <td>
                           <span :class="['badge', row.active ? 'bg-success' : 'bg-danger']">
                             {{ row.active ? 'Active' : 'Inactive' }}
                           </span>
                         </td>
-                        <td>{{ row.firmware_version || '-' }}</td>
+                        <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">
                           <div class="btn-group">
                             <button
@@ -433,8 +438,7 @@ function cancelDelete() {
           </p>
           <p class="text-muted mb-0">
             Device: {{ boardToDelete?.device?.device_id }}<br>
-            Type: {{ boardToDelete?.board_type }}<br>
-            MAC: {{ boardToDelete?.mac_address }}
+            Type: {{ boardToDelete?.board_type }}
           </p>
         </div>
         <div class="modal-footer">

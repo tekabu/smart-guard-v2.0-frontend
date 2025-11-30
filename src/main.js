@@ -33,5 +33,26 @@ app.directive("click-ripple", clickRipple);
 app.use(createPinia());
 app.use(router);
 
+// Handle unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  
+  // If it's an unauthorized error, clear auth and redirect
+  if (event.reason?.response?.status === 401) {
+    // Clear auth store
+    const { useAuthStore } = require('@/stores/auth');
+    const authStore = useAuthStore();
+    authStore.clearAuth();
+    
+    // Only redirect if not already on login page
+    if (window.location.pathname !== '/signin') {
+      window.location.href = '/signin';
+    }
+  }
+  
+  // Prevent the default browser behavior
+  event.preventDefault();
+});
+
 // ..and finally mount it!
 app.mount("#app");

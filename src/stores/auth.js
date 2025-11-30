@@ -41,19 +41,27 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       await authService.logout();
-      user.value = null;
-      isAuthenticated.value = false;
-
-      // Clear any stored data
-      localStorage.removeItem('user');
-
-      return { success: true };
     } catch (err) {
-      error.value = err.response?.data?.message || 'Logout failed';
-      return { success: false, error: error.value };
+      // Even if server logout fails, we should clear local auth
+      console.warn('Server logout failed, but clearing local auth:', err);
     } finally {
+      // Always clear local auth state
+      clearAuth();
       loading.value = false;
+      return { success: true };
     }
+  }
+
+  /**
+   * Clear authentication state
+   */
+  function clearAuth() {
+    user.value = null;
+    isAuthenticated.value = false;
+    error.value = null;
+    
+    // Clear any stored data
+    localStorage.removeItem('user');
   }
 
   /**
@@ -73,19 +81,11 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { success: true, user: response.data.data };
     } catch (err) {
-      // Only clear user data if we don't already have a user
-      // This prevents clearing user data when just checking an existing session
-      if (!user.value) {
-        user.value = null;
-        isAuthenticated.value = false;
+      // Only clear user data if we get 401 or similar auth error
+      if (err.response?.status === 401) {
+        clearAuth();
       }
       error.value = err.response?.data?.message || 'Failed to fetch user';
-
-      // Clear localStorage only if we're not just checking
-      if (!localStorage.getItem('user') || !user.value) {
-        localStorage.removeItem('user');
-      }
-
       return { success: false, error: error.value };
     } finally {
       loading.value = false;
@@ -128,15 +128,22 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = parsedUser.data || parsedUser;
         isAuthenticated.value = true;
         
-        // Try to verify with server, but don't fail if it doesn't work
+        // Verify with server, but handle errors gracefully
         try {
           await fetchUser();
         } catch (error) {
-          // Server verification failed, but keep localStorage user
-          console.warn('Server verification failed, using stored user data');
+          // Server verification failed with 401, clear auth
+          if (error.response?.status === 401) {
+            console.warn('Session expired, clearing auth');
+            clearAuth();
+          } else {
+            // Other error, keep localStorage user but log warning
+            console.warn('Server verification failed, using stored user data');
+          }
         }
       } catch (e) {
-        localStorage.removeItem('user');
+        console.warn('Invalid stored user data, clearing');
+        clearAuth();
       }
     }
   }
@@ -158,6 +165,7 @@ export const useAuthStore = defineStore('auth', () => {
     // Actions
     login,
     logout,
+    clearAuth,
     fetchUser,
     register,
     checkAuth,
