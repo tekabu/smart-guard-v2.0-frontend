@@ -158,7 +158,7 @@ async function saveSectionSubjectStudent(sectionSubjectStudentData) {
       }
 
       // Show success message
-      showSuccessToast('Section subject student updated successfully');
+      showSuccessToast('Student subject updated successfully');
     } else {
       // Create new section subject student
       const response = await sectionSubjectStudentsService.create(sectionSubjectStudentData);
@@ -167,7 +167,7 @@ async function saveSectionSubjectStudent(sectionSubjectStudentData) {
       sectionSubjectStudents.value.unshift(response.data);
 
       // Show success message
-      showSuccessToast('Section subject student created successfully');
+      showSuccessToast('Student subject created successfully');
     }
 
     // Close modal only on successful API request
@@ -199,9 +199,9 @@ async function deleteSectionSubjectStudent() {
     showDeleteModal.value = false;
     sectionSubjectStudentToDelete.value = null;
 
-    showSuccessToast('Section subject student deleted successfully');
+    showSuccessToast('Student subject deleted successfully');
   } catch (err) {
-    console.error('Error deleting section subject student:', err);
+    console.error('Error deleting student subject:', err);
     showErrorToast(err);
   }
 }
@@ -221,7 +221,7 @@ function formatDate(dateString) {
 
 <template>
   <!-- Hero -->
-  <BasePageHeading title="Section Subject Students" subtitle="Manage student enrollments in section subjects.">
+  <BasePageHeading title="Student Subject" subtitle="Manage student enrollments in section subjects.">
     <template #extra>
       <button
         class="btn btn-primary"
@@ -235,13 +235,13 @@ function formatDate(dateString) {
 
   <!-- Page Content -->
   <div class="content">
-    <BaseBlock title="Section Subject Students List" content-full>
+    <BaseBlock title="Student Subjects List" content-full>
       <!-- Loading state -->
       <div v-if="isLoading" class="text-center py-5">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="mt-3">Loading section subject students...</p>
+        <p class="mt-3">Loading student subjects...</p>
       </div>
 
       <!-- Error state -->
@@ -313,7 +313,7 @@ function formatDate(dateString) {
                               type="button"
                               class="btn btn-sm btn-alt-secondary"
                               @click="editSectionSubjectStudent(row)"
-                              title="Edit Section Subject Student"
+                              title="Edit Student Subject"
                             >
                               <i class="fa fa-fw fa-pencil-alt"></i>
                             </button>
@@ -321,7 +321,7 @@ function formatDate(dateString) {
                               type="button"
                               class="btn btn-sm btn-alt-secondary"
                               @click="confirmDelete(row)"
-                              title="Delete Section Subject Student"
+                              title="Delete Student Subject"
                             >
                               <i class="fa fa-fw fa-times"></i>
                             </button>
@@ -376,7 +376,7 @@ function formatDate(dateString) {
         </div>
         <div class="modal-body">
           <p v-if="sectionSubjectStudentToDelete">
-            Are you sure you want to delete this section subject student enrollment?
+            Are you sure you want to delete this student subject enrollment?
           </p>
           <p class="text-muted mb-0">
             Section: <strong>{{ sectionSubjectStudentToDelete?.section_subject?.section?.section }}</strong><br>

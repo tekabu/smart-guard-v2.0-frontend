@@ -62,12 +62,12 @@ export default {
       to: "sectionSubjects",
     },
     {
-      name: "Section Subject Students",
+      name: "Students Subject",
       icon: "si si-people",
       to: "sectionSubjectStudents",
     },
     {
-      name: "Section Subject Schedules",
+      name: "Schedules",
       icon: "si si-clock",
       to: "sectionSubjectSchedules",
     },

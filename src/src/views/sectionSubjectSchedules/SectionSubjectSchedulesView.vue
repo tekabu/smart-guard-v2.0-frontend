@@ -246,7 +246,7 @@ function formatTime(time24) {
 
 <template>
   <!-- Hero -->
-  <BasePageHeading title="Section Subject Schedules" subtitle="Manage class schedules for section subjects.">
+  <BasePageHeading title="Schedules" subtitle="Manage class schedules for section subjects.">
     <template #extra>
       <button
         class="btn btn-primary"

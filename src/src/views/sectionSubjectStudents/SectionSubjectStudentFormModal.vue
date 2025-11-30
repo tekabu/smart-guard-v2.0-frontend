@@ -127,7 +127,7 @@ function saveSectionSubjectStudent() {
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">{{ isEditMode ? "Edit Section Subject Student" : "Add New Section Subject Student" }}</h5>
+          <h5 class="modal-title">{{ isEditMode ? "Edit Student Subject" : "Add New Student Subject" }}</h5>
           <button
             type="button"
             class="btn-close"
@@ -201,7 +201,7 @@ function saveSectionSubjectStudent() {
             Cancel
           </button>
           <button type="button" class="btn btn-primary" @click="saveSectionSubjectStudent">
-            {{ isEditMode ? "Save Changes" : "Create Section Subject Student" }}
+            {{ isEditMode ? "Save Changes" : "Create Student Subject" }}
           </button>
         </div>
       </div>
