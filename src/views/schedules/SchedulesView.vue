@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
+import Swal from "sweetalert2";
 
 import {
   Dataset,
@@ -10,7 +11,7 @@ import {
   DatasetShow,
 } from "vue-dataset";
 
-import EditScheduleModal from "./EditScheduleModal.vue";
+import ScheduleFormModal from "./ScheduleFormModal.vue";
 import schedulesService from "@/services/schedules";
 import facultyService from "@/services/faculty";
 import roomsService from "@/services/rooms";
@@ -20,6 +21,7 @@ import subjectsService from "@/services/subjects";
 const schedules = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
+const pageSize = ref(10);
 
 // Filter state
 const activeFilter = ref(null);
@@ -39,11 +41,6 @@ const cols = reactive([
   {
     name: "Day",
     field: "day_of_week",
-    sort: "",
-  },
-  {
-    name: "Time",
-    field: "start_time",
     sort: "",
   },
   {
@@ -181,31 +178,77 @@ const resetFilters = () => {
 // Modal state
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
-const showCreateModal = ref(false);
 const selectedSchedule = ref(null);
 const scheduleToDelete = ref(null);
+const isEditMode = ref(false);
 
 // Edit schedule
 function editSchedule(schedule) {
   selectedSchedule.value = { ...schedule };
+  isEditMode.value = true;
   showEditModal.value = true;
 }
 
-// Save schedule
-async function saveSchedule(updatedSchedule) {
+// Add new schedule
+function addSchedule() {
+  selectedSchedule.value = null;
+  isEditMode.value = false;
+  showEditModal.value = true;
+}
+
+// Save schedule (for both create and update)
+async function saveSchedule(scheduleData) {
   try {
-    const response = await schedulesService.update(updatedSchedule.id, updatedSchedule);
-    
-    // Update schedule in local list
-    const index = schedules.value.findIndex((s) => s.id === updatedSchedule.id);
-    if (index !== -1) {
-      schedules.value[index] = response.data;
+    if (isEditMode.value) {
+      // Update existing schedule
+      const response = await schedulesService.update(scheduleData.id, scheduleData);
+      
+      // Update schedule in local list
+      const index = schedules.value.findIndex((s) => s.id === scheduleData.id);
+      if (index !== -1) {
+        schedules.value[index] = response.data;
+      }
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Schedule updated successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    } else {
+      // Create new schedule
+      const response = await schedulesService.create(scheduleData);
+      
+      // Add new schedule to local list
+      schedules.value.unshift(response.data);
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Schedule created successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
     
     showEditModal.value = false;
   } catch (err) {
     console.error('Error saving schedule:', err);
-    alert('Failed to save schedule. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to save schedule',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -258,7 +301,7 @@ function formatDate(dateString) {
     <template #extra>
       <button 
         class="btn btn-primary" 
-        @click="showCreateModal = true"
+        @click="addSchedule"
       >
         <i class="fa fa-plus me-1"></i> Add New
       </button>
@@ -306,7 +349,8 @@ function formatDate(dateString) {
       <template v-else>
         <Dataset
           v-slot="{ ds }"
-          :ds-data="schedules"
+          :ds-page-size="pageSize"
+:ds-data="schedules"
           :ds-sortby="sortBy"
           :ds-search-in="['user.name', 'day_of_week', 'room.room_number', 'subject.subject', 'active']"
         >
@@ -317,7 +361,7 @@ function formatDate(dateString) {
                 <select 
                   class="form-select" 
                   style="width: auto; min-width: 65px; max-width: 80px;"
-                  @input="ds.setPageCount($event.target.value)"
+                  v-model="pageSize"
                 >
                   <option value="10">10</option>
                   <option value="25">25</option>
@@ -354,7 +398,6 @@ function formatDate(dateString) {
                       <tr>
                         <td style="min-width: 150px">{{ getFacultyName(row.user) }}</td>
                         <td>{{ row.day_of_week }}</td>
-                        <td>{{ row.start_time || '-' }} - {{ row.end_time || '-' }}</td>
                         <td>{{ getRoomNumber(row.room) }}</td>
                         <td>{{ getSubjectName(row.subject) }}</td>
                         <td>
@@ -402,8 +445,8 @@ function formatDate(dateString) {
   </div>
   <!-- END Page Content -->
 
-  <!-- Edit Schedule Modal -->
-  <EditScheduleModal
+  <!-- Schedule Form Modal -->
+  <ScheduleFormModal
     :schedule="selectedSchedule"
     :show="showEditModal"
     :faculty-list="facultyList"

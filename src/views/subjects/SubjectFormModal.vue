@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 
 const props = defineProps({
   subject: {
@@ -14,6 +14,9 @@ const props = defineProps({
 
 const emit = defineEmits(["update:show", "save"]);
 
+// Determine if we're editing or creating
+const isEditMode = computed(() => !!props.subject?.id);
+
 // Form data
 const formData = ref({
   id: null,
@@ -21,20 +24,63 @@ const formData = ref({
   active: true,
 });
 
+// Form validation
+const formErrors = ref({});
+
 // Watch for subject prop changes to populate form
 watch(
   () => props.subject,
   (newSubject) => {
-    if (newSubject) {
+    if (newSubject && newSubject.id) {
+      // Editing existing subject
       formData.value = {
         id: newSubject.id,
         subject: newSubject.subject || "",
         active: newSubject.active !== undefined ? newSubject.active : true,
       };
+    } else {
+      // Creating new subject - reset form
+      resetForm();
     }
   },
   { immediate: true }
 );
+
+// Watch for show prop to reset form when modal opens for new subject
+watch(
+  () => props.show,
+  (newShow) => {
+    if (newShow && !props.subject) {
+      resetForm();
+    }
+  }
+);
+
+// Reset form to defaults
+function resetForm() {
+  formData.value = {
+    id: null,
+    subject: "",
+    active: true,
+  };
+  formErrors.value = {};
+}
+
+// Validate form
+function validateForm() {
+  formErrors.value = {};
+  
+  // Subject name validation
+  if (!formData.value.subject.trim()) {
+    formErrors.value.subject = "Subject name is required";
+  } else if (formData.value.subject.trim().length < 3) {
+    formErrors.value.subject = "Subject name must be at least 3 characters";
+  } else if (formData.value.subject.trim().length > 100) {
+    formErrors.value.subject = "Subject name cannot exceed 100 characters";
+  }
+  
+  return Object.keys(formErrors.value).length === 0;
+}
 
 // Close modal
 function closeModal() {
@@ -43,8 +89,21 @@ function closeModal() {
 
 // Save subject
 function saveSubject() {
+  // Validate form
+  if (!validateForm()) {
+    return;
+  }
+
+  // Prepare data for submission
+  const dataToSave = { ...formData.value };
+  
+  // Remove id if it's null (for creating new subject)
+  if (!dataToSave.id) {
+    delete dataToSave.id;
+  }
+  
   // Emit save event with form data
-  emit("save", { ...formData.value });
+  emit("save", dataToSave);
   closeModal();
 }
 </script>
@@ -60,7 +119,7 @@ function saveSubject() {
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Edit Subject</h5>
+          <h5 class="modal-title">{{ isEditMode ? "Edit Subject" : "Add New Subject" }}</h5>
           <button
             type="button"
             class="btn-close"
@@ -72,15 +131,21 @@ function saveSubject() {
           <form @submit.prevent="saveSubject">
             <!-- Subject Name -->
             <div class="mb-3">
-              <label for="subject-name" class="form-label">Subject</label>
+              <label for="subject-name" class="form-label">Subject Name <span class="text-danger">*</span></label>
               <input
                 type="text"
                 class="form-control"
+                :class="{ 'is-invalid': formErrors.subject }"
                 id="subject-name"
                 autocomplete="off"
                 v-model="formData.subject"
+                placeholder="Enter subject name"
                 required
               />
+              <div v-if="formErrors.subject" class="invalid-feedback">
+                {{ formErrors.subject }}
+              </div>
+              <div class="form-text">Subject name must be between 3 and 100 characters</div>
             </div>
 
             <!-- Active Toggle -->
@@ -108,7 +173,7 @@ function saveSubject() {
             Cancel
           </button>
           <button type="button" class="btn btn-primary" @click="saveSubject">
-            Save Changes
+            {{ isEditMode ? "Save Changes" : "Create Subject" }}
           </button>
         </div>
       </div>

@@ -164,7 +164,8 @@ th.sort {
     <BaseBlock title="Vue Dataset" content-full>
       <Dataset
         v-slot="{ ds }"
-        :ds-data="users"
+        :ds-page-size="pageSize"
+:ds-data="users"
         :ds-sortby="sortBy"
         :ds-search-in="['name', 'email', 'company', 'birthdate']"
       >

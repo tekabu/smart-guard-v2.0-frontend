@@ -11,7 +11,6 @@ import {
   DatasetShow,
 } from "vue-dataset";
 
-import EditUserModal from "./EditUserModal.vue";
 import usersService from "@/services/users";
 
 // Users data from API
@@ -523,8 +522,8 @@ th.sort {
   </div>
   <!-- END Page Content -->
 
-  <!-- Edit User Modal -->
-  <EditUserModal
+  <!-- User Form Modal -->
+  <UserFormModal
     :user="selectedUser"
     :show="showEditModal"
     @update:show="showEditModal = $event"

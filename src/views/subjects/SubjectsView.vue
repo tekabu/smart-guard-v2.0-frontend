@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
+import Swal from "sweetalert2";
 
 import {
   Dataset,
@@ -10,13 +11,14 @@ import {
   DatasetShow,
 } from "vue-dataset";
 
-import EditSubjectModal from "./EditSubjectModal.vue";
+import SubjectFormModal from "./SubjectFormModal.vue";
 import subjectsService from "@/services/subjects";
 
 // Subjects data from API
 const subjects = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
+const pageSize = ref(10);
 
 // Filter state
 const activeFilter = ref(null);
@@ -130,33 +132,79 @@ const resetFilters = () => {
 };
 
 // Modal state
-const showEditModal = ref(false);
+const showFormModal = ref(false);
 const showDeleteModal = ref(false);
-const showCreateModal = ref(false);
 const selectedSubject = ref(null);
 const subjectToDelete = ref(null);
+const isEditMode = ref(false);
 
 // Edit subject
 function editSubject(subject) {
   selectedSubject.value = { ...subject };
-  showEditModal.value = true;
+  isEditMode.value = true;
+  showFormModal.value = true;
 }
 
-// Save subject
-async function saveSubject(updatedSubject) {
+// Add new subject
+function addSubject() {
+  selectedSubject.value = null;
+  isEditMode.value = false;
+  showFormModal.value = true;
+}
+
+// Save subject (for both create and update)
+async function saveSubject(subjectData) {
   try {
-    const response = await subjectsService.update(updatedSubject.id, updatedSubject);
-    
-    // Update subject in local list
-    const index = subjects.value.findIndex((s) => s.id === updatedSubject.id);
-    if (index !== -1) {
-      subjects.value[index] = response.data;
+    if (isEditMode.value) {
+      // Update existing subject
+      const response = await subjectsService.update(subjectData.id, subjectData);
+      
+      // Update subject in local list
+      const index = subjects.value.findIndex((s) => s.id === subjectData.id);
+      if (index !== -1) {
+        subjects.value[index] = response.data;
+      }
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Subject updated successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    } else {
+      // Create new subject
+      const response = await subjectsService.create(subjectData);
+      
+      // Add new subject to local list
+      subjects.value.unshift(response.data);
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Subject created successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
     
-    showEditModal.value = false;
+    showFormModal.value = false;
   } catch (err) {
     console.error('Error saving subject:', err);
-    alert('Failed to save subject. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to save subject',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -204,7 +252,7 @@ function formatDate(dateString) {
     <template #extra>
       <button 
         class="btn btn-primary" 
-        @click="showCreateModal = true"
+        @click="addSubject"
       >
         <i class="fa fa-plus me-1"></i> Add New
       </button>
@@ -255,6 +303,7 @@ function formatDate(dateString) {
           :ds-data="subjects"
           :ds-sortby="sortBy"
           :ds-search-in="['subject', 'active']"
+          :ds-page-size="pageSize"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
@@ -263,7 +312,7 @@ function formatDate(dateString) {
                 <select 
                   class="form-select" 
                   style="width: auto; min-width: 65px; max-width: 80px;"
-                  @input="ds.setPageCount($event.target.value)"
+                  v-model="pageSize"
                 >
                   <option value="10">10</option>
                   <option value="25">25</option>
@@ -344,11 +393,11 @@ function formatDate(dateString) {
   </div>
   <!-- END Page Content -->
 
-  <!-- Edit Subject Modal -->
-  <EditSubjectModal
+  <!-- Subject Form Modal -->
+  <SubjectFormModal
     :subject="selectedSubject"
-    :show="showEditModal"
-    @update:show="showEditModal = $event"
+    :show="showFormModal"
+    @update:show="showFormModal = $event"
     @save="saveSubject"
   />
 

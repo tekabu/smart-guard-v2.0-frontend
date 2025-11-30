@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
+import Swal from "sweetalert2";
 
 import {
   Dataset,
@@ -10,13 +11,14 @@ import {
   DatasetShow,
 } from "vue-dataset";
 
-import EditRoomModal from "./EditRoomModal.vue";
+import RoomFormModal from "./RoomFormModal.vue";
 import roomsService from "@/services/rooms";
 
 // Rooms data from API
 const rooms = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
+const pageSize = ref(10);
 
 // Filter state
 const activeFilter = ref(null);
@@ -121,31 +123,77 @@ const applyFilters = async () => {
 // Modal state
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
-const showCreateModal = ref(false);
 const selectedRoom = ref(null);
 const roomToDelete = ref(null);
+const isEditMode = ref(false);
 
 // Edit room
 function editRoom(room) {
   selectedRoom.value = { ...room };
+  isEditMode.value = true;
   showEditModal.value = true;
 }
 
-// Save room
-async function saveRoom(updatedRoom) {
+// Add new room
+function addRoom() {
+  selectedRoom.value = null;
+  isEditMode.value = false;
+  showEditModal.value = true;
+}
+
+// Save room (for both create and update)
+async function saveRoom(roomData) {
   try {
-    const response = await roomsService.update(updatedRoom.id, updatedRoom);
-    
-    // Update room in local list
-    const index = rooms.value.findIndex((r) => r.id === updatedRoom.id);
-    if (index !== -1) {
-      rooms.value[index] = response.data;
+    if (isEditMode.value) {
+      // Update existing room
+      const response = await roomsService.update(roomData.id, roomData);
+      
+      // Update room in local list
+      const index = rooms.value.findIndex((r) => r.id === roomData.id);
+      if (index !== -1) {
+        rooms.value[index] = response.data;
+      }
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Room updated successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    } else {
+      // Create new room
+      const response = await roomsService.create(roomData);
+      
+      // Add new room to local list
+      rooms.value.unshift(response.data);
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Room created successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
     
     showEditModal.value = false;
   } catch (err) {
     console.error('Error saving room:', err);
-    alert('Failed to save room. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to save room',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -158,6 +206,7 @@ function confirmDelete(room) {
 // Delete room
 async function deleteRoom() {
   try {
+    const roomName = roomToDelete.value.room_number || roomToDelete.value.name;
     await roomsService.delete(roomToDelete.value.id);
     
     // Remove room from local list
@@ -168,9 +217,27 @@ async function deleteRoom() {
     
     showDeleteModal.value = false;
     roomToDelete.value = null;
+    
+    // Show success message
+    await new Promise(resolve => setTimeout(resolve, 100));
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Room deleted successfully',
+      showConfirmButton: false,
+      timer: 3000
+    });
   } catch (err) {
     console.error('Error deleting room:', err);
-    alert('Failed to delete room. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to delete room',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -193,7 +260,7 @@ function formatDate(dateString) {
     <template #extra>
       <button 
         class="btn btn-primary" 
-        @click="showCreateModal = true"
+        @click="addRoom"
       >
         <i class="fa fa-plus me-1"></i> Add New
       </button>
@@ -247,6 +314,7 @@ function formatDate(dateString) {
           :ds-data="rooms"
           :ds-sortby="sortBy"
           :ds-search-in="['room_number', 'device.device_id', 'active']"
+          :ds-page-size="pageSize"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
@@ -255,7 +323,7 @@ function formatDate(dateString) {
                 <select 
                   class="form-select" 
                   style="width: auto; min-width: 65px; max-width: 80px;"
-                  @input="ds.setPageCount($event.target.value)"
+                  v-model="pageSize"
                 >
                   <option value="10">10</option>
                   <option value="25">25</option>
@@ -337,8 +405,8 @@ function formatDate(dateString) {
   </div>
   <!-- END Page Content -->
 
-  <!-- Edit Room Modal -->
-  <EditRoomModal
+  <!-- Room Form Modal -->
+  <RoomFormModal
     :room="selectedRoom"
     :show="showEditModal"
     @update:show="showEditModal = $event"

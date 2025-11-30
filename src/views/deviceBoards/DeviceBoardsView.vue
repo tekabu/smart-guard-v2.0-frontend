@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
+import Swal from "sweetalert2";
 
 import {
   Dataset,
@@ -10,7 +11,7 @@ import {
   DatasetShow,
 } from "vue-dataset";
 
-import EditDeviceBoardModal from "./EditDeviceBoardModal.vue";
+import DeviceBoardFormModal from "./DeviceBoardFormModal.vue";
 import deviceBoardsService from "@/services/deviceBoards";
 import devicesService from "@/services/devices";
 
@@ -18,6 +19,7 @@ import devicesService from "@/services/devices";
 const deviceBoards = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
+const pageSize = ref(10);
 
 // Available devices
 const availableDevices = ref([]);
@@ -163,31 +165,77 @@ const resetFilters = () => {
 // Modal state
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
-const showCreateModal = ref(false);
 const selectedBoard = ref(null);
 const boardToDelete = ref(null);
+const isEditMode = ref(false);
 
 // Edit device board
 function editDeviceBoard(board) {
   selectedBoard.value = { ...board };
+  isEditMode.value = true;
   showEditModal.value = true;
 }
 
-// Save device board
-async function saveDeviceBoard(updatedBoard) {
+// Add new device board
+function addDeviceBoard() {
+  selectedBoard.value = null;
+  isEditMode.value = false;
+  showEditModal.value = true;
+}
+
+// Save device board (for both create and update)
+async function saveDeviceBoard(boardData) {
   try {
-    const response = await deviceBoardsService.update(updatedBoard.id, updatedBoard);
-    
-    // Update device board in local list
-    const index = deviceBoards.value.findIndex((b) => b.id === updatedBoard.id);
-    if (index !== -1) {
-      deviceBoards.value[index] = response.data;
+    if (isEditMode.value) {
+      // Update existing board
+      const response = await deviceBoardsService.update(boardData.id, boardData);
+      
+      // Update board in local list
+      const index = deviceBoards.value.findIndex((b) => b.id === boardData.id);
+      if (index !== -1) {
+        deviceBoards.value[index] = response.data;
+      }
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Device board updated successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    } else {
+      // Create new board
+      const response = await deviceBoardsService.create(boardData);
+      
+      // Add new board to local list
+      deviceBoards.value.unshift(response.data);
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Device board created successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
     
     showEditModal.value = false;
   } catch (err) {
     console.error('Error saving device board:', err);
-    alert('Failed to save device board. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to save device board',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -235,7 +283,7 @@ function formatDate(dateString) {
     <template #extra>
       <button 
         class="btn btn-primary" 
-        @click="showCreateModal = true"
+        @click="addDeviceBoard"
       >
         <i class="fa fa-plus me-1"></i> Add New
       </button>
@@ -309,7 +357,8 @@ function formatDate(dateString) {
       <template v-else>
         <Dataset
           v-slot="{ ds }"
-          :ds-data="deviceBoards"
+          :ds-page-size="pageSize"
+:ds-data="deviceBoards"
           :ds-sortby="sortBy"
           :ds-search-in="['device.device_id', 'board_type', 'active']"
         >
@@ -320,7 +369,7 @@ function formatDate(dateString) {
                 <select 
                   class="form-select" 
                   style="width: auto; min-width: 65px; max-width: 80px;"
-                  @input="ds.setPageCount($event.target.value)"
+                  v-model="pageSize"
                 >
                   <option value="10">10</option>
                   <option value="25">25</option>
@@ -404,8 +453,8 @@ function formatDate(dateString) {
   </div>
   <!-- END Page Content -->
 
-  <!-- Edit Device Board Modal -->
-  <EditDeviceBoardModal
+  <!-- Device Board Form Modal -->
+  <DeviceBoardFormModal
     :board="selectedBoard"
     :show="showEditModal"
     :devices="availableDevices"

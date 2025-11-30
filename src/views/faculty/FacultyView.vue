@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
+import Swal from "sweetalert2";
 
 import {
   Dataset,
@@ -10,13 +11,14 @@ import {
   DatasetShow,
 } from "vue-dataset";
 
-import EditFacultyModal from "./EditFacultyModal.vue";
+import FacultyFormModal from "./FacultyFormModal.vue";
 import facultyService from "@/services/faculty";
 
 // Faculty data from API
 const faculty = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
+const pageSize = ref(10);
 
 // Filter state
 const activeFilter = ref(null);
@@ -146,33 +148,79 @@ const applyFilters = async () => {
 };
 
 // Modal state
-const showEditModal = ref(false);
+const showFormModal = ref(false);
 const showDeleteModal = ref(false);
-const showCreateModal = ref(false);
 const selectedFaculty = ref(null);
 const facultyToDelete = ref(null);
+const isEditMode = ref(false);
 
 // Edit faculty member
 function editFacultyMember(facultyMember) {
   selectedFaculty.value = { ...facultyMember };
-  showEditModal.value = true;
+  isEditMode.value = true;
+  showFormModal.value = true;
 }
 
-// Save faculty member
-async function saveFacultyMember(updatedFaculty) {
+// Add new faculty member
+function addFacultyMember() {
+  selectedFaculty.value = null;
+  isEditMode.value = false;
+  showFormModal.value = true;
+}
+
+// Save faculty member (for both create and update)
+async function saveFacultyMember(facultyData) {
   try {
-    const response = await facultyService.update(updatedFaculty.id, updatedFaculty);
-    
-    // Update faculty member in local list
-    const index = faculty.value.findIndex((f) => f.id === updatedFaculty.id);
-    if (index !== -1) {
-      faculty.value[index] = response.data;
+    if (isEditMode.value) {
+      // Update existing faculty
+      const response = await facultyService.update(facultyData.id, facultyData);
+      
+      // Update faculty in local list
+      const index = faculty.value.findIndex((f) => f.id === facultyData.id);
+      if (index !== -1) {
+        faculty.value[index] = response.data;
+      }
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Faculty member updated successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    } else {
+      // Create new faculty
+      const response = await facultyService.create(facultyData);
+      
+      // Add new faculty to local list
+      faculty.value.unshift(response.data);
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Faculty member created successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
     
-    showEditModal.value = false;
+    showFormModal.value = false;
   } catch (err) {
     console.error('Error saving faculty member:', err);
-    alert('Failed to save faculty member. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to save faculty member',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -185,6 +233,7 @@ function confirmDelete(facultyMember) {
 // Delete faculty member
 async function deleteFacultyMember() {
   try {
+    const facultyName = facultyToDelete.value.name;
     await facultyService.delete(facultyToDelete.value.id);
     
     // Remove faculty member from local list
@@ -195,9 +244,27 @@ async function deleteFacultyMember() {
     
     showDeleteModal.value = false;
     facultyToDelete.value = null;
+    
+    // Show success message
+    await new Promise(resolve => setTimeout(resolve, 100));
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Faculty member deleted successfully',
+      showConfirmButton: false,
+      timer: 3000
+    });
   } catch (err) {
     console.error('Error deleting faculty member:', err);
-    alert('Failed to delete faculty member. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to delete faculty member',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -220,7 +287,7 @@ function formatDate(dateString) {
     <template #extra>
       <button 
         class="btn btn-primary" 
-        @click="showCreateModal = true"
+        @click="addFacultyMember"
       >
         <i class="fa fa-plus me-1"></i> Add New
       </button>
@@ -284,6 +351,7 @@ function formatDate(dateString) {
           :ds-data="faculty"
           :ds-sortby="sortBy"
           :ds-search-in="['name', 'email', 'faculty_id', 'department', 'active']"
+          :ds-page-size="pageSize"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
@@ -292,7 +360,7 @@ function formatDate(dateString) {
                 <select 
                   class="form-select" 
                   style="width: auto; min-width: 65px; max-width: 80px;"
-                  @input="ds.setPageCount($event.target.value)"
+                  v-model="pageSize"
                 >
                   <option value="10">10</option>
                   <option value="25">25</option>
@@ -376,11 +444,11 @@ function formatDate(dateString) {
   </div>
   <!-- END Page Content -->
 
-  <!-- Edit Faculty Modal -->
-  <EditFacultyModal
+  <!-- Faculty Form Modal -->
+  <FacultyFormModal
     :faculty="selectedFaculty"
-    :show="showEditModal"
-    @update:show="showEditModal = $event"
+    :show="showFormModal"
+    @update:show="showFormModal = $event"
     @save="saveFacultyMember"
   />
 

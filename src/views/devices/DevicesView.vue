@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
+import Swal from "sweetalert2";
 
 import {
   Dataset,
@@ -10,13 +11,14 @@ import {
   DatasetShow,
 } from "vue-dataset";
 
-import EditDeviceModal from "./EditDeviceModal.vue";
+import DeviceFormModal from "./DeviceFormModal.vue";
 import devicesService from "@/services/devices";
 
 // Devices data from API
 const devices = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
+const pageSize = ref(10);
 
 // Filter state
 const activeFilter = ref(null);
@@ -140,33 +142,79 @@ const resetFilters = () => {
 };
 
 // Modal state
-const showEditModal = ref(false);
+const showFormModal = ref(false);
 const showDeleteModal = ref(false);
-const showCreateModal = ref(false);
 const selectedDevice = ref(null);
 const deviceToDelete = ref(null);
+const isEditMode = ref(false);
 
 // Edit device
 function editDevice(device) {
   selectedDevice.value = { ...device };
-  showEditModal.value = true;
+  isEditMode.value = true;
+  showFormModal.value = true;
 }
 
-// Save device
-async function saveDevice(updatedDevice) {
+// Add new device
+function addDevice() {
+  selectedDevice.value = null;
+  isEditMode.value = false;
+  showFormModal.value = true;
+}
+
+// Save device (for both create and update)
+async function saveDevice(deviceData) {
   try {
-    const response = await devicesService.update(updatedDevice.id, updatedDevice);
-    
-    // Update device in local list
-    const index = devices.value.findIndex((d) => d.id === updatedDevice.id);
-    if (index !== -1) {
-      devices.value[index] = response.data;
+    if (isEditMode.value) {
+      // Update existing device
+      const response = await devicesService.update(deviceData.id, deviceData);
+      
+      // Update device in local list
+      const index = devices.value.findIndex((d) => d.id === deviceData.id);
+      if (index !== -1) {
+        devices.value[index] = response.data;
+      }
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Device updated successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    } else {
+      // Create new device
+      const response = await devicesService.create(deviceData);
+      
+      // Add new device to local list
+      devices.value.unshift(response.data);
+      
+      // Show success message
+      await new Promise(resolve => setTimeout(resolve, 100));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Device created successfully',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
     
-    showEditModal.value = false;
+    showFormModal.value = false;
   } catch (err) {
     console.error('Error saving device:', err);
-    alert('Failed to save device. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to save device',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -179,6 +227,7 @@ function confirmDelete(device) {
 // Delete device
 async function deleteDevice() {
   try {
+    const deviceName = deviceToDelete.value.name || deviceToDelete.value.device_id;
     await devicesService.delete(deviceToDelete.value.id);
     
     // Remove device from local list
@@ -189,9 +238,27 @@ async function deleteDevice() {
     
     showDeleteModal.value = false;
     deviceToDelete.value = null;
+    
+    // Show success message
+    await new Promise(resolve => setTimeout(resolve, 100));
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Device deleted successfully',
+      showConfirmButton: false,
+      timer: 3000
+    });
   } catch (err) {
     console.error('Error deleting device:', err);
-    alert('Failed to delete device. Please try again.');
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Failed to delete device',
+      showConfirmButton: false,
+      timer: 3000
+    });
   }
 }
 
@@ -214,7 +281,7 @@ function formatDate(dateString) {
     <template #extra>
       <button 
         class="btn btn-primary" 
-        @click="showCreateModal = true"
+        @click="addDevice"
       >
         <i class="fa fa-plus me-1"></i> Add New
       </button>
@@ -265,6 +332,7 @@ function formatDate(dateString) {
           :ds-data="devices"
           :ds-sortby="sortBy"
           :ds-search-in="['device_id', 'door_open_duration_seconds', 'active']"
+          :ds-page-size="pageSize"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
@@ -273,7 +341,7 @@ function formatDate(dateString) {
                 <select 
                   class="form-select" 
                   style="width: auto; min-width: 65px; max-width: 80px;"
-                  @input="ds.setPageCount($event.target.value)"
+                  v-model="pageSize"
                 >
                   <option value="10">10</option>
                   <option value="25">25</option>
@@ -356,11 +424,11 @@ function formatDate(dateString) {
   </div>
   <!-- END Page Content -->
 
-  <!-- Edit Device Modal -->
-  <EditDeviceModal
+  <!-- Device Form Modal -->
+  <DeviceFormModal
     :device="selectedDevice"
-    :show="showEditModal"
-    @update:show="showEditModal = $event"
+    :show="showFormModal"
+    @update:show="showFormModal = $event"
     @save="saveDevice"
   />
 
