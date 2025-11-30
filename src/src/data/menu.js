@@ -51,6 +51,21 @@ export default {
       icon: "si si-calendar",
       to: "schedules",
     },
+    {
+      name: "Sections",
+      icon: "si si-layers",
+      to: "sections",
+    },
+    {
+      name: "Section Subjects",
+      icon: "si si-organization",
+      to: "sectionSubjects",
+    },
+    {
+      name: "Section Subject Students",
+      icon: "si si-people",
+      to: "sectionSubjectStudents",
+    },
   ],
   boxed: [
     {

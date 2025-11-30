@@ -17,6 +17,9 @@ const DeviceBoards = () => import("@/views/deviceBoards/DeviceBoardsView.vue");
 const Rooms = () => import("@/views/rooms/RoomsView.vue");
 const Subjects = () => import("@/views/subjects/SubjectsView.vue");
 const Schedules = () => import("@/views/schedules/SchedulesView.vue");
+const Sections = () => import("@/views/sections/SectionsView.vue");
+const SectionSubjects = () => import("@/views/sectionSubjects/SectionSubjectsView.vue");
+const SectionSubjectStudents = () => import("@/views/sectionSubjectStudents/SectionSubjectStudentsView.vue");
 
 // Auth
 const AuthSignIn = () => import("@/views/auth/SignInView.vue");
@@ -130,6 +133,39 @@ const routes = [
         path: "",
         name: "schedules",
         component: Schedules,
+      },
+    ],
+  },
+  {
+    path: "/sections",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "sections",
+        component: Sections,
+      },
+    ],
+  },
+  {
+    path: "/section-subjects",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "sectionSubjects",
+        component: SectionSubjects,
+      },
+    ],
+  },
+  {
+    path: "/section-subject-students",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "sectionSubjectStudents",
+        component: SectionSubjectStudents,
       },
     ],
   },
