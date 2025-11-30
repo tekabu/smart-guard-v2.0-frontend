@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+
+# Node
+src/node_modules
+src/npm-debug.log
+
+# Build output
+src/dist
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+coverage
+.nyc_output
+
+# Environment
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+
+# Documentation
+*.md
+!README.md
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Other
+.crush
+.claude
