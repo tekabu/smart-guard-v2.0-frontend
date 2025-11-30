@@ -205,10 +205,10 @@ function formatDate(dateString) {
           <!-- Card form -->
           <div v-if="showCardForm" class="card mb-3">
             <div class="card-body">
-              <h6 class="card-title text-body">{{ isEditMode ? 'Edit RFID Card' : 'Add New RFID Card' }}</h6>
+              <h6 class="card-title">{{ isEditMode ? 'Edit RFID Card' : 'Add New RFID Card' }}</h6>
               <form @submit.prevent="saveCard">
                 <div class="mb-3">
-                  <label for="card-id" class="form-label text-body">Card ID <span class="text-danger">*</span></label>
+                  <label for="card-id" class="form-label">Card ID <span class="text-danger">*</span></label>
                   <input
                     type="text"
                     class="form-control"
@@ -230,7 +230,7 @@ function formatDate(dateString) {
                       id="card-active"
                       v-model="formData.active"
                     />
-                    <label class="form-check-label text-body" for="card-active">
+                    <label class="form-check-label" for="card-active">
                       Active
                     </label>
                   </div>
@@ -349,5 +349,12 @@ function formatDate(dateString) {
 
 .modal {
   z-index: 1050;
+}
+
+/* Ensure labels and titles adapt to theme */
+.dark-mode .form-label,
+.dark-mode .form-check-label,
+.dark-mode .card-title {
+  color: #d4d8dd !important;
 }
 </style>

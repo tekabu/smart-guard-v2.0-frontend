@@ -205,10 +205,10 @@ function formatDate(dateString) {
           <!-- Fingerprint form -->
           <div v-if="showFingerprintForm" class="card mb-3">
             <div class="card-body">
-              <h6 class="card-title text-body">{{ isEditMode ? 'Edit Fingerprint' : 'Add New Fingerprint' }}</h6>
+              <h6 class="card-title">{{ isEditMode ? 'Edit Fingerprint' : 'Add New Fingerprint' }}</h6>
               <form @submit.prevent="saveFingerprint">
                 <div class="mb-3">
-                  <label for="fingerprint-id" class="form-label text-body">Fingerprint ID <span class="text-danger">*</span></label>
+                  <label for="fingerprint-id" class="form-label">Fingerprint ID <span class="text-danger">*</span></label>
                   <input
                     type="number"
                     class="form-control"
@@ -230,7 +230,7 @@ function formatDate(dateString) {
                       id="fingerprint-active"
                       v-model="formData.active"
                     />
-                    <label class="form-check-label text-body" for="fingerprint-active">
+                    <label class="form-check-label" for="fingerprint-active">
                       Active
                     </label>
                   </div>
@@ -349,5 +349,12 @@ function formatDate(dateString) {
 
 .modal {
   z-index: 1050;
+}
+
+/* Ensure labels and titles adapt to theme */
+.dark-mode .form-label,
+.dark-mode .form-check-label,
+.dark-mode .card-title {
+  color: #d4d8dd !important;
 }
 </style>
