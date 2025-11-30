@@ -187,10 +187,12 @@ async function saveDevice(deviceData) {
       showSuccessToast('Device created successfully');
     }
     
+    // Close modal only on successful API request
     showFormModal.value = false;
   } catch (err) {
     console.error('Error saving device:', err);
     showErrorToast(err);
+    // Don't close modal on error - let user fix the issue
   }
 }
 
@@ -219,7 +221,6 @@ async function deleteDevice() {
     console.error('Error deleting device:', err);
     showErrorToast(err);
   }
-}
 }
 
 // Cancel delete

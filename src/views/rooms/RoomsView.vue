@@ -168,10 +168,12 @@ async function saveRoom(roomData) {
       showSuccessToast('Room created successfully');
     }
     
+    // Close modal only on successful API request
     showEditModal.value = false;
   } catch (err) {
     console.error('Error saving room:', err);
     showErrorToast(err);
+    // Don't close modal on error - let user fix the issue
   }
 }
 

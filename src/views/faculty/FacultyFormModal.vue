@@ -149,7 +149,7 @@ function saveFacultyMember() {
   
   // Emit save event with form data
   emit("save", dataToSave);
-  closeModal();
+  // Don't close modal here - let parent component handle it after API request
 }
 </script>
 

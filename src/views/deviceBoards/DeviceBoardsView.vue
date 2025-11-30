@@ -210,10 +210,12 @@ async function saveDeviceBoard(boardData) {
       showSuccessToast('Device board created successfully');
     }
     
+    // Close modal only on successful API request
     showEditModal.value = false;
   } catch (err) {
     console.error('Error saving device board:', err);
     showErrorToast(err);
+    // Don't close modal on error - let user fix the issue
   }
 }
 

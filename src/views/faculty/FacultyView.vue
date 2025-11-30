@@ -195,10 +195,12 @@ async function saveFacultyMember(facultyData) {
       showSuccessToast('Faculty member created successfully');
     }
     
+    // Close modal only on successful API request
     showFormModal.value = false;
   } catch (err) {
     console.error('Error saving faculty member:', err);
     showErrorToast(err);
+    // Don't close modal on error - let user fix the issue
   }
 }
 

@@ -272,10 +272,12 @@ async function saveSchedule(scheduleData) {
       showSuccessToast('Schedule created successfully');
     }
     
+    // Close modal only on successful API request
     showEditModal.value = false;
   } catch (err) {
     console.error('Error saving schedule:', err);
     showErrorToast(err);
+    // Don't close modal on error - let user fix the issue
   }
 }
 

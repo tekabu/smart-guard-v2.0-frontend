@@ -167,6 +167,7 @@ async function createUser(userData) {
   } catch (err) {
     console.error('Error creating user:', err);
     showErrorToast(err);
+    // Don't close modal on error - let user fix the issue
   }
 }
 
@@ -217,27 +218,11 @@ async function deleteUser() {
     showDeleteModal.value = false;
     userToDelete.value = null;
     
-    // Show success message after a small delay
-    await new Promise(resolve => setTimeout(resolve, 100));
-    console.log('Showing delete success toast for users');
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'User deleted successfully',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    // Show success message using consistent toast pattern
+    showSuccessToast('User deleted successfully');
   } catch (err) {
     console.error('Error deleting user:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to delete user',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 

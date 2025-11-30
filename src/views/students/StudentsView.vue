@@ -214,7 +214,7 @@ async function saveStudent(studentData) {
         students.value[index] = response.data;
       }
       
-      // Close modal first
+      // Close modal only on successful API request
       showFormModal.value = false;
       
       // Show success message
@@ -226,7 +226,7 @@ async function saveStudent(studentData) {
       // Add new student to local list
       students.value.unshift(response.data);
       
-      // Close modal first
+      // Close modal only on successful API request
       showFormModal.value = false;
       
       // Show success message
@@ -235,6 +235,7 @@ async function saveStudent(studentData) {
   } catch (err) {
     console.error('Error saving student:', err);
     showErrorToast(err);
+    // Don't close modal on error - let user fix the issue
   }
 }
 
