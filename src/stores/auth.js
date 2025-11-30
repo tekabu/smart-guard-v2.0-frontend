@@ -25,6 +25,8 @@ export const useAuthStore = defineStore('auth', () => {
         return { success: true };
       }
     } catch (err) {
+      // Clear any existing auth state on login failure
+      clearAuth();
       error.value = err.response?.data?.message || 'Login failed';
       return { success: false, error: error.value };
     } finally {

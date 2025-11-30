@@ -46,9 +46,9 @@ api.interceptors.response.use(
           const authStore = useAuthStore();
           authStore.clearAuth();
           
-          // Only redirect if not already on login page
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
+          // Only redirect if not already on login page to avoid redirect loops
+          if (window.location.pathname !== '/signin' && window.location.pathname !== '/login') {
+            window.location.href = '/signin';
           }
           break;
         case 419:
