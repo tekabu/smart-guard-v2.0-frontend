@@ -20,6 +20,7 @@ const Schedules = () => import("@/views/schedules/SchedulesView.vue");
 const Sections = () => import("@/views/sections/SectionsView.vue");
 const SectionSubjects = () => import("@/views/sectionSubjects/SectionSubjectsView.vue");
 const SectionSubjectStudents = () => import("@/views/sectionSubjectStudents/SectionSubjectStudentsView.vue");
+const SectionSubjectSchedules = () => import("@/views/sectionSubjectSchedules/SectionSubjectSchedulesView.vue");
 
 // Auth
 const AuthSignIn = () => import("@/views/auth/SignInView.vue");
@@ -166,6 +167,17 @@ const routes = [
         path: "",
         name: "sectionSubjectStudents",
         component: SectionSubjectStudents,
+      },
+    ],
+  },
+  {
+    path: "/section-subject-schedules",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "sectionSubjectSchedules",
+        component: SectionSubjectSchedules,
       },
     ],
   },

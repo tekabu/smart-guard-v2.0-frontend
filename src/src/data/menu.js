@@ -66,6 +66,11 @@ export default {
       icon: "si si-people",
       to: "sectionSubjectStudents",
     },
+    {
+      name: "Section Subject Schedules",
+      icon: "si si-clock",
+      to: "sectionSubjectSchedules",
+    },
   ],
   boxed: [
     {
