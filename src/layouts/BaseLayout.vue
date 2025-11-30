@@ -20,7 +20,7 @@ defineProps({
 // Main store
 const store = useTemplateStore();
 
-// Set default color theme
+// Set default color theme and restore from localStorage
 store.setColorTheme({
   theme: store.settings.colorTheme,
 });
