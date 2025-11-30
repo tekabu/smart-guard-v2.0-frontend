@@ -106,9 +106,9 @@ onMounted(() => {
             <div class="bg-body-light rounded-bottom">
               <RouterLink
                 class="block-content block-content-full block-content-sm fs-sm fw-medium d-flex align-items-center justify-content-between text-decoration-none"
-                to="/backend/devices"
+                to="/devices"
               >
-                <span>Manage devices</span>
+                <span>Manage Devices</span>
                 <i class="fa fa-arrow-alt-circle-right ms-1 opacity-25 fs-base"></i>
               </RouterLink>
             </div>
@@ -141,9 +141,9 @@ onMounted(() => {
             <div class="bg-body-light rounded-bottom">
               <RouterLink
                 class="block-content block-content-full block-content-sm fs-sm fw-medium d-flex align-items-center justify-content-between text-decoration-none"
-                to="/backend/rooms"
+                to="/rooms"
               >
-                <span>Manage rooms</span>
+                <span>Manage Rooms</span>
                 <i class="fa fa-arrow-alt-circle-right ms-1 opacity-25 fs-base"></i>
               </RouterLink>
             </div>
@@ -176,9 +176,9 @@ onMounted(() => {
             <div class="bg-body-light rounded-bottom">
               <RouterLink
                 class="block-content block-content-full block-content-sm fs-sm fw-medium d-flex align-items-center justify-content-between text-decoration-none"
-                to="/backend/schedules"
+                to="/schedules"
               >
-                <span>Manage schedules</span>
+                <span>Manage Schedules</span>
                 <i class="fa fa-arrow-alt-circle-right ms-1 opacity-25 fs-base"></i>
               </RouterLink>
             </div>
@@ -211,9 +211,9 @@ onMounted(() => {
             <div class="bg-body-light rounded-bottom">
               <RouterLink
                 class="block-content block-content-full block-content-sm fs-sm fw-medium d-flex align-items-center justify-content-between text-decoration-none"
-                to="/backend/subjects"
+                to="/subjects"
               >
-                <span>Manage subjects</span>
+                <span>Manage Subjects</span>
                 <i class="fa fa-arrow-alt-circle-right ms-1 opacity-25 fs-base"></i>
               </RouterLink>
             </div>
@@ -246,9 +246,9 @@ onMounted(() => {
             <div class="bg-body-light rounded-bottom">
               <RouterLink
                 class="block-content block-content-full block-content-sm fs-sm fw-medium d-flex align-items-center justify-content-between text-decoration-none"
-                to="/backend/users"
+                to="/users"
               >
-                <span>Manage users</span>
+                <span>Manage Users</span>
                 <i class="fa fa-arrow-alt-circle-right ms-1 opacity-25 fs-base"></i>
               </RouterLink>
             </div>
