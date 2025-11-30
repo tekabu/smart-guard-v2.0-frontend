@@ -2,6 +2,7 @@
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
+import { getSortedFilterOptions, naturalCompare } from "@/utils/naturalSort";
 
 import {
   Dataset,
@@ -22,8 +23,12 @@ const error = ref(null);
 const pageSize = ref(10);
 
 // Filter state
-const activeFilter = ref(null);
-const roleFilter = ref(null);
+const activeFilter = ref("All");
+const roleFilter = ref("All");
+
+// Computed filter options with natural sorting
+const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
+const roleOptions = computed(() => ['All', 'ADMIN', 'STAFF']);
 
 // Helper variables
 const cols = reactive([
@@ -54,8 +59,8 @@ const cols = reactive([
   },
 ]);
 
-// Apply active filter
-const applyActiveFilter = async () => {
+// Apply filters
+const applyFilters = async () => {
   try {
     isLoading.value = true;
     error.value = null;
@@ -66,12 +71,14 @@ const applyActiveFilter = async () => {
     );
     
     // Apply active filter
-    if (activeFilter.value !== null) {
-      filteredData = filteredData.filter(user => user.active === activeFilter.value);
+    if (activeFilter.value !== "All") {
+      filteredData = filteredData.filter(user => 
+        user.active === (activeFilter.value === 'Active')
+      );
     }
     
     // Apply role filter
-    if (roleFilter.value) {
+    if (roleFilter.value !== "All") {
       filteredData = filteredData.filter(user => user.role === roleFilter.value);
     }
     
@@ -125,7 +132,7 @@ function onSort(event, i) {
 // Apply a few Bootstrap 5 optimizations
 onMounted(() => {
   // Fetch users on component mount
-  applyActiveFilter();
+  applyFilters();
 });
 
 // Modal state
@@ -234,9 +241,9 @@ function cancelDelete() {
 
 // Reset filters
 const resetFilters = () => {
-  activeFilter.value = null;
-  roleFilter.value = null;
-  applyActiveFilter();
+  activeFilter.value = "All";
+  roleFilter.value = "All";
+  applyFilters();
 };
 
 // Format date
@@ -337,23 +344,31 @@ th.sort {
       <div class="row">
         <div class="col-md-3">
           <label class="form-label">Role</label>
-          <select class="form-select" v-model="roleFilter" @change="applyActiveFilter">
-            <option :value="null">All Roles</option>
-            <option value="ADMIN">ADMIN</option>
-            <option value="STAFF">STAFF</option>
+          <select class="form-select" v-model="roleFilter" @change="applyFilters">
+            <option
+              v-for="role in roleOptions"
+              :key="role"
+              :value="role"
+            >
+              {{ role === 'All' ? 'All Roles' : role }}
+            </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Status</label>
-          <select class="form-select" v-model="activeFilter" @change="applyActiveFilter">
-            <option :value="null">All Status</option>
-            <option :value="true">Active</option>
-            <option :value="false">Inactive</option>
+          <select class="form-select" v-model="activeFilter" @change="applyFilters">
+            <option
+              v-for="status in statusOptions"
+              :key="status"
+              :value="status"
+            >
+              {{ status === 'All' ? 'All Status' : status }}
+            </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">&nbsp;</label>
-          <button class="btn btn-secondary w-100" @click="activeFilter = null; roleFilter = null; applyActiveFilter()">
+          <button class="btn btn-secondary w-100" @click="resetFilters">
             <i class="fa fa-undo me-1"></i> Reset
           </button>
         </div>

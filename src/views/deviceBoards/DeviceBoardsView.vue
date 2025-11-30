@@ -2,6 +2,7 @@
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
+import { getSortedFilterOptions } from "@/utils/naturalSort";
 
 import {
   Dataset,
@@ -28,11 +29,23 @@ const availableDevices = ref([]);
 // Dynamic board types from API
 const availableBoardTypes = ref([]);
 
+// Computed filter options with natural sorting
+const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
+const boardTypeOptions = computed(() => {
+  if (!availableBoardTypes.value || !availableBoardTypes.value.length) return ['All'];
+  return getSortedFilterOptions(availableBoardTypes.value);
+});
+const deviceOptions = computed(() => {
+  if (!availableDevices.value || !availableDevices.value.length) return ['All'];
+  const deviceIds = availableDevices.value.map(d => d.device_id);
+  return getSortedFilterOptions(deviceIds);
+});
+
 // Filters
 const filters = ref({
-  device_id: null,
-  board_type: null,
-  active: null
+  device_id: "All",
+  board_type: "All",
+  active: "All"
 });
 
 // Helper variables
@@ -139,12 +152,23 @@ const applyFilters = async () => {
     error.value = null;
     
     const filterData = {};
-    if (filters.value.device_id) filterData.device_id = filters.value.device_id;
-    if (filters.value.board_type) filterData.board_type = filters.value.board_type;
-    if (filters.value.active !== null) filterData.active = filters.value.active;
+    if (filters.value.device_id !== "All") {
+      // Convert device_id (which might be the actual ID back to device_id string)
+      const device = availableDevices.value.find(d => d.id === filters.value.device_id);
+      if (device) {
+        filterData.device_id = device.device_id;
+      }
+    }
+    if (filters.value.board_type !== "All") filterData.board_type = filters.value.board_type;
+    if (filters.value.active !== "All") filterData.active = filters.value.active === 'Active';
     
-    const response = await deviceBoardsService.getFiltered(filterData);
-    deviceBoards.value = response.data;
+    if (Object.keys(filterData).length > 0) {
+      const response = await deviceBoardsService.getFiltered(filterData);
+      deviceBoards.value = response.data;
+    } else {
+      const response = await deviceBoardsService.getAll();
+      deviceBoards.value = response.data;
+    }
   } catch (err) {
     console.error('Error applying filters:', err);
     error.value = 'Failed to apply filters. Please try again.';
@@ -156,9 +180,9 @@ const applyFilters = async () => {
 // Reset filters
 const resetFilters = () => {
   filters.value = {
-    device_id: null,
-    board_type: null,
-    active: null
+    device_id: "All",
+    board_type: "All",
+    active: "All"
   };
   fetchAllData();
 };
@@ -281,35 +305,37 @@ function formatDate(dateString) {
         <div class="col-md-3">
           <label class="form-label">Device</label>
           <select class="form-select" v-model="filters.device_id" @change="applyFilters">
-            <option :value="null">All Devices</option>
             <option
-              v-for="device in availableDevices"
-              :key="device.id"
-              :value="device.id"
+              v-for="(deviceId, index) in deviceOptions"
+              :key="deviceId"
+              :value="deviceId === 'All' ? 'All' : (availableDevices.value && availableDevices.value.find(d => d.device_id === deviceId)?.id)"
             >
-              {{ device.device_id }}
+              {{ deviceId === 'All' ? 'All Devices' : deviceId }}
             </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Board Type</label>
           <select class="form-select" v-model="filters.board_type" @change="applyFilters">
-            <option :value="null">All Types</option>
             <option
-              v-for="type in availableBoardTypes"
+              v-for="type in boardTypeOptions"
               :key="type"
               :value="type"
             >
-              {{ type }}
+              {{ type === 'All' ? 'All Types' : type }}
             </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Status</label>
           <select class="form-select" v-model="filters.active" @change="applyFilters">
-            <option :value="null">All Status</option>
-            <option :value="true">Active</option>
-            <option :value="false">Inactive</option>
+            <option
+              v-for="status in statusOptions"
+              :key="status"
+              :value="status"
+            >
+              {{ status === 'All' ? 'All Status' : status }}
+            </option>
           </select>
         </div>
         <div class="col-md-3">

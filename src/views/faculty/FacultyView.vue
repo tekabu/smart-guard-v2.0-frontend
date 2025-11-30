@@ -2,6 +2,7 @@
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
+import { getSortedFilterOptions } from "@/utils/naturalSort";
 
 import {
   Dataset,
@@ -22,11 +23,18 @@ const error = ref(null);
 const pageSize = ref(10);
 
 // Filter state
-const activeFilter = ref(null);
-const departmentFilter = ref(null);
+const activeFilter = ref("All");
+const departmentFilter = ref("All");
 
 // Dynamic filter options
 const availableDepartments = ref([]);
+
+// Computed filter options with natural sorting
+const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
+const departmentOptions = computed(() => {
+  if (!availableDepartments.value || !availableDepartments.value.length) return ['All'];
+  return getSortedFilterOptions(availableDepartments.value);
+});
 
 // Helper variables
 const cols = reactive([
@@ -102,8 +110,8 @@ function onSort(event, i) {
 
 // Reset filters
 const resetFilters = () => {
-  activeFilter.value = null;
-  departmentFilter.value = null;
+  activeFilter.value = "All";
+  departmentFilter.value = "All";
   applyFilters();
 };
 
@@ -127,15 +135,17 @@ const applyFilters = async () => {
       .map(member => member.department)
       .filter(dept => dept))];
     
-    availableDepartments.value = allDepartments.sort();
+    availableDepartments.value = allDepartments;
     
     // Apply active filter
-    if (activeFilter.value !== null) {
-      filteredData = filteredData.filter(member => member.active === activeFilter.value);
+    if (activeFilter.value !== "All") {
+      filteredData = filteredData.filter(member => 
+        member.active === (activeFilter.value === 'Active')
+      );
     }
     
     // Apply department filter
-    if (departmentFilter.value) {
+    if (departmentFilter.value !== "All") {
       filteredData = filteredData.filter(member => member.department === departmentFilter.value);
     }
     
@@ -268,21 +278,24 @@ function formatDate(dateString) {
         <div class="col-md-3">
           <label class="form-label">Status</label>
           <select class="form-select" v-model="activeFilter" @change="applyFilters">
-            <option :value="null">All Status</option>
-            <option :value="true">Active</option>
-            <option :value="false">Inactive</option>
+            <option
+              v-for="status in statusOptions"
+              :key="status"
+              :value="status"
+            >
+              {{ status === 'All' ? 'All Status' : status }}
+            </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Department</label>
           <select class="form-select" v-model="departmentFilter" @change="applyFilters">
-            <option :value="null">All Departments</option>
             <option
-              v-for="department in availableDepartments"
+              v-for="department in departmentOptions"
               :key="department"
               :value="department"
             >
-              {{ department }}
+              {{ department === 'All' ? 'All Departments' : department }}
             </option>
           </select>
         </div>

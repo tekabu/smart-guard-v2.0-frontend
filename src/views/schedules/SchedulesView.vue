@@ -2,6 +2,7 @@
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
+import { getSortedFilterOptions } from "@/utils/naturalSort";
 
 import {
   Dataset,
@@ -26,14 +27,26 @@ const error = ref(null);
 const pageSize = ref(10);
 
 // Filter state
-const activeFilter = ref(null);
-const facultyFilter = ref(null);
-const dayFilter = ref(null);
-const roomFilter = ref(null);
-const subjectFilter = ref(null);
+const activeFilter = ref("All");
+const facultyFilter = ref("All");
+const dayFilter = ref("All");
+const roomFilter = ref("All");
+const subjectFilter = ref("All");
 
 // Dynamic filter options
 const availableDays = ref([]);
+
+// Computed filter options with natural sorting
+const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
+const dayOptions = computed(() => {
+  if (!availableDays.value || !availableDays.value.length) return ['All'];
+  return getSortedFilterOptions(availableDays.value);
+});
+const roomOptions = computed(() => {
+  if (!roomList.value || !roomList.value.length) return ['All'];
+  const roomNumbers = roomList.value.map(r => r.room_number);
+  return getSortedFilterOptions(roomNumbers);
+});
 
 // Reference data
 const facultyList = ref([]);
@@ -158,30 +171,32 @@ const applyFilters = async () => {
       .map(schedule => schedule.day_of_week)
       .filter(day => day))];
     
-    availableDays.value = allDays.sort();
+    availableDays.value = allDays;
     
     // Apply active filter
-    if (activeFilter.value !== null) {
-      filteredData = filteredData.filter(schedule => schedule.active === activeFilter.value);
+    if (activeFilter.value !== "All") {
+      filteredData = filteredData.filter(schedule => 
+        schedule.active === (activeFilter.value === 'Active')
+      );
     }
     
     // Apply faculty filter
-    if (facultyFilter.value) {
+    if (facultyFilter.value !== "All") {
       filteredData = filteredData.filter(schedule => schedule.user_id === facultyFilter.value);
     }
     
     // Apply day filter
-    if (dayFilter.value) {
+    if (dayFilter.value !== "All") {
       filteredData = filteredData.filter(schedule => schedule.day_of_week === dayFilter.value);
     }
     
     // Apply room filter
-    if (roomFilter.value) {
+    if (roomFilter.value !== "All") {
       filteredData = filteredData.filter(schedule => schedule.room_id === roomFilter.value);
     }
     
     // Apply subject filter
-    if (subjectFilter.value) {
+    if (subjectFilter.value !== "All") {
       filteredData = filteredData.filter(schedule => schedule.subject_id === subjectFilter.value);
     }
     
@@ -207,11 +222,11 @@ const applyFilters = async () => {
 
 // Reset filters
 const resetFilters = () => {
-  activeFilter.value = null;
-  facultyFilter.value = null;
-  dayFilter.value = null;
-  roomFilter.value = null;
-  subjectFilter.value = null;
+  activeFilter.value = "All";
+  facultyFilter.value = "All";
+  dayFilter.value = "All";
+  roomFilter.value = "All";
+  subjectFilter.value = "All";
   applyFilters();
 };
 
@@ -346,7 +361,7 @@ function formatDate(dateString) {
         <div class="col-md-3">
           <label class="form-label">Faculty</label>
           <select class="form-select" v-model="facultyFilter" @change="applyFilters">
-            <option :value="null">All Faculty</option>
+            <option :value="'All'">All Faculty</option>
             <option v-for="faculty in facultyList" :key="faculty.id" :value="faculty.id">
               {{ faculty.name }}
             </option>
@@ -355,25 +370,31 @@ function formatDate(dateString) {
         <div class="col-md-3">
           <label class="form-label">Day</label>
           <select class="form-select" v-model="dayFilter" @change="applyFilters">
-            <option :value="null">All Days</option>
-            <option v-for="day in availableDays" :key="day" :value="day">
-              {{ day }}
+            <option
+              v-for="day in dayOptions"
+              :key="day"
+              :value="day"
+            >
+              {{ day === 'All' ? 'All Days' : day }}
             </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Room</label>
           <select class="form-select" v-model="roomFilter" @change="applyFilters">
-            <option :value="null">All Rooms</option>
-            <option v-for="room in roomList" :key="room.id" :value="room.id">
-              {{ room.room_number }}
+            <option
+              v-for="(roomNumber, index) in roomOptions"
+              :key="roomNumber"
+              :value="roomNumber === 'All' ? 'All' : (roomList.value && roomList.value.find(r => r.room_number === roomNumber)?.id)"
+            >
+              {{ roomNumber === 'All' ? 'All Rooms' : roomNumber }}
             </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Subject</label>
           <select class="form-select" v-model="subjectFilter" @change="applyFilters">
-            <option :value="null">All Subjects</option>
+            <option :value="'All'">All Subjects</option>
             <option v-for="subject in subjectList" :key="subject.id" :value="subject.id">
               {{ subject.subject }}
             </option>
@@ -384,9 +405,13 @@ function formatDate(dateString) {
         <div class="col-md-3">
           <label class="form-label">Status</label>
           <select class="form-select" v-model="activeFilter" @change="applyFilters">
-            <option :value="null">All Status</option>
-            <option :value="true">Active</option>
-            <option :value="false">Inactive</option>
+            <option
+              v-for="status in statusOptions"
+              :key="status"
+              :value="status"
+            >
+              {{ status === 'All' ? 'All Status' : status }}
+            </option>
           </select>
         </div>
         <div class="col-md-3">

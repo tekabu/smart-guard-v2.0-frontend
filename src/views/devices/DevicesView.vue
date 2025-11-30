@@ -2,6 +2,7 @@
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
+import { getSortedFilterOptions } from "@/utils/naturalSort";
 
 import {
   Dataset,
@@ -22,7 +23,10 @@ const error = ref(null);
 const pageSize = ref(10);
 
 // Filter state
-const activeFilter = ref(null);
+const activeFilter = ref("All");
+
+// Computed filter options with natural sorting
+const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
 
 // Helper variables
 const cols = reactive([
@@ -123,8 +127,10 @@ const applyFilters = async () => {
     let filteredData = response.data;
     
     // Apply active filter
-    if (activeFilter.value !== null) {
-      filteredData = filteredData.filter(device => device.active === activeFilter.value);
+    if (activeFilter.value !== "All") {
+      filteredData = filteredData.filter(device => 
+        device.active === (activeFilter.value === 'Active')
+      );
     }
     
     devices.value = filteredData;
@@ -138,7 +144,7 @@ const applyFilters = async () => {
 
 // Reset filters
 const resetFilters = () => {
-  activeFilter.value = null;
+  activeFilter.value = "All";
   applyFilters();
 };
 
@@ -258,9 +264,13 @@ function formatDate(dateString) {
         <div class="col-md-3">
           <label class="form-label">Status</label>
           <select class="form-select" v-model="activeFilter" @change="applyFilters">
-            <option :value="null">All Status</option>
-            <option :value="true">Active</option>
-            <option :value="false">Inactive</option>
+            <option
+              v-for="status in statusOptions"
+              :key="status"
+              :value="status"
+            >
+              {{ status === 'All' ? 'All Status' : status }}
+            </option>
           </select>
         </div>
         <div class="col-md-3">

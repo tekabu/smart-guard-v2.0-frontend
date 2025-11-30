@@ -2,6 +2,7 @@
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
+import { getSortedFilterOptions } from "@/utils/naturalSort";
 
 // Set default properties for SweetAlert2
 const toast = Swal.mixin({
@@ -32,13 +33,24 @@ const error = ref(null);
 const pageSize = ref(10);
 
 // Filter state
-const activeFilter = ref(null);
-const courseFilter = ref(null);
-const departmentFilter = ref(null);
+const activeFilter = ref("All");
+const courseFilter = ref("All");
+const departmentFilter = ref("All");
 
 // Dynamic filter options
 const availableCourses = ref([]);
 const availableDepartments = ref([]);
+
+// Computed filter options with natural sorting
+const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
+const courseOptions = computed(() => {
+  if (!availableCourses.value || !availableCourses.value.length) return ['All'];
+  return getSortedFilterOptions(availableCourses.value);
+});
+const departmentOptions = computed(() => {
+  if (!availableDepartments.value || !availableDepartments.value.length) return ['All'];
+  return getSortedFilterOptions(availableDepartments.value);
+});
 
 // Helper variables
 const cols = reactive([
@@ -124,9 +136,9 @@ function onSort(event, i) {
 
 // Reset filters
 const resetFilters = () => {
-  activeFilter.value = null;
-  courseFilter.value = null;
-  departmentFilter.value = null;
+  activeFilter.value = "All";
+  courseFilter.value = "All";
+  departmentFilter.value = "All";
   applyFilters();
 };
 
@@ -153,21 +165,23 @@ const applyFilters = async () => {
       .map(student => student.department)
       .filter(dept => dept))];
     
-    availableCourses.value = allCourses.sort();
-    availableDepartments.value = allDepartments.sort();
+    availableCourses.value = allCourses;
+    availableDepartments.value = allDepartments;
     
     // Apply active filter
-    if (activeFilter.value !== null) {
-      filteredData = filteredData.filter(student => student.active === activeFilter.value);
+    if (activeFilter.value !== "All") {
+      filteredData = filteredData.filter(student => 
+        student.active === (activeFilter.value === 'Active')
+      );
     }
     
     // Apply course filter
-    if (courseFilter.value) {
+    if (courseFilter.value !== "All") {
       filteredData = filteredData.filter(student => student.course === courseFilter.value);
     }
     
     // Apply department filter
-    if (departmentFilter.value) {
+    if (departmentFilter.value !== "All") {
       filteredData = filteredData.filter(student => student.department === departmentFilter.value);
     }
     
@@ -304,34 +318,36 @@ function formatDate(dateString) {
         <div class="col-md-3">
           <label class="form-label">Status</label>
           <select class="form-select" v-model="activeFilter" @change="applyFilters">
-            <option :value="null">All Status</option>
-            <option :value="true">Active</option>
-            <option :value="false">Inactive</option>
+            <option
+              v-for="status in statusOptions"
+              :key="status"
+              :value="status"
+            >
+              {{ status === 'All' ? 'All Status' : status }}
+            </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Course</label>
           <select class="form-select" v-model="courseFilter" @change="applyFilters">
-            <option :value="null">All Courses</option>
             <option
-              v-for="course in availableCourses"
+              v-for="course in courseOptions"
               :key="course"
               :value="course"
             >
-              {{ course }}
+              {{ course === 'All' ? 'All Courses' : course }}
             </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Department</label>
           <select class="form-select" v-model="departmentFilter" @change="applyFilters">
-            <option :value="null">All Departments</option>
             <option
-              v-for="department in availableDepartments"
+              v-for="department in departmentOptions"
               :key="department"
               :value="department"
             >
-              {{ department }}
+              {{ department === 'All' ? 'All Departments' : department }}
             </option>
           </select>
         </div>
