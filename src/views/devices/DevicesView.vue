@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
+import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 
 import {
   Dataset,
@@ -129,7 +130,7 @@ const applyFilters = async () => {
     devices.value = filteredData;
   } catch (err) {
     console.error('Error applying filters:', err);
-    error.value = 'Failed to apply filters. Please try again.';
+    error.value = getErrorMessage(err);
   } finally {
     isLoading.value = false;
   }
@@ -175,16 +176,7 @@ async function saveDevice(deviceData) {
         devices.value[index] = response.data;
       }
       
-      // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Device updated successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Device updated successfully');
     } else {
       // Create new device
       const response = await devicesService.create(deviceData);
@@ -192,29 +184,13 @@ async function saveDevice(deviceData) {
       // Add new device to local list
       devices.value.unshift(response.data);
       
-      // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Device created successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Device created successfully');
     }
     
     showFormModal.value = false;
   } catch (err) {
     console.error('Error saving device:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to save device',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 
@@ -238,28 +214,12 @@ async function deleteDevice() {
     
     showDeleteModal.value = false;
     deviceToDelete.value = null;
-    
-    // Show success message
-    await new Promise(resolve => setTimeout(resolve, 100));
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'Device deleted successfully',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showSuccessToast('Device deleted successfully');
   } catch (err) {
     console.error('Error deleting device:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to delete device',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
+}
 }
 
 // Cancel delete
@@ -438,7 +398,6 @@ function formatDate(dateString) {
     :class="{ show: showDeleteModal, 'd-block': showDeleteModal }"
     tabindex="-1"
     role="dialog"
-    @click.self="cancelDelete"
   >
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">

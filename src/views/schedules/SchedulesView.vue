@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
+import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 
 import {
   Dataset,
@@ -260,16 +261,7 @@ async function saveSchedule(scheduleData) {
         schedules.value[index] = response.data;
       }
       
-      // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Schedule updated successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Schedule updated successfully');
     } else {
       // Create new schedule
       const response = await schedulesService.create(scheduleData);
@@ -277,29 +269,13 @@ async function saveSchedule(scheduleData) {
       // Add new schedule to local list
       schedules.value.unshift(response.data);
       
-      // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Schedule created successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Schedule created successfully');
     }
     
     showEditModal.value = false;
   } catch (err) {
     console.error('Error saving schedule:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to save schedule',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 
@@ -324,7 +300,7 @@ async function deleteSchedule() {
     scheduleToDelete.value = null;
   } catch (err) {
     console.error('Error deleting schedule:', err);
-    alert('Failed to delete schedule. Please try again.');
+    showErrorToast(err);
   }
 }
 
@@ -527,8 +503,8 @@ function formatDate(dateString) {
                       
                       <!-- Periods Row -->
                       <tr v-if="expandedRows.has(row.id)" :key="`periods-${row.id}`">
-                        <td colspan="7" class="p-0">
-                          <div class="bg-light p-3">
+                        <td colspan="7" class="p-0 bg-body">
+                          <div class="p-3">
                             <h6 class="mb-3">Schedule Periods</h6>
                             <div class="row">
                               <div class="col-12">
@@ -576,7 +552,6 @@ function formatDate(dateString) {
     :class="{ show: showDeleteModal, 'd-block': showDeleteModal }"
     tabindex="-1"
     role="dialog"
-    @click.self="cancelDelete"
   >
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">

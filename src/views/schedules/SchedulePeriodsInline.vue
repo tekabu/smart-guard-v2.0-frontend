@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import Swal from "sweetalert2";
+import { getErrorMessage, showErrorToast, showSuccessToast } from '@/utils/errorHandler';
 
 const props = defineProps({
   scheduleId: {
@@ -22,6 +23,44 @@ const formData = ref({
   active: true,
 });
 
+// Computed properties to handle time input conversion
+const startTimeInput = ref('');
+const endTimeInput = ref('');
+
+// Convert 12-hour time to 24-hour format for API
+const convertTo24Hour = (time12) => {
+  if (!time12) return '';
+  
+  const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return time12;
+  
+  let [, hours, minutes, period] = match;
+  hours = parseInt(hours);
+  
+  if (period.toLowerCase() === 'pm' && hours !== 12) {
+    hours += 12;
+  } else if (period.toLowerCase() === 'am' && hours === 12) {
+    hours = 0;
+  }
+  
+  return `${hours.toString().padStart(2, '0')}:${minutes}:00`;
+};
+
+// Convert 24-hour time to 12-hour format for input
+const convertTo12Hour = (time24) => {
+  if (!time24) return '';
+  
+  const [hours, minutes] = time24.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  let displayHours = hours % 12;
+  
+  if (displayHours === 0) {
+    displayHours = 12;
+  }
+  
+  return `${displayHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+};
+
 // Fetch periods for this schedule
 const fetchPeriods = async () => {
   if (!props.scheduleId) return;
@@ -31,7 +70,8 @@ const fetchPeriods = async () => {
     error.value = null;
     const schedulePeriodsService = (await import('@/services/schedulePeriods')).default;
     const response = await schedulePeriodsService.getByScheduleId(props.scheduleId);
-    periods.value = response.data;
+    // Handle the API response format
+    periods.value = response.data || response;
   } catch (err) {
     console.error('Error fetching periods:', err);
     error.value = 'Failed to load schedule periods';
@@ -47,6 +87,15 @@ watch(() => props.scheduleId, (newScheduleId) => {
   }
 }, { immediate: true });
 
+// Watch for form changes to convert to 24-hour format
+watch(startTimeInput, (newValue) => {
+  formData.value.start_time = convertTo24Hour(newValue);
+});
+
+watch(endTimeInput, (newValue) => {
+  formData.value.end_time = convertTo24Hour(newValue);
+});
+
 // Reset form
 const resetForm = () => {
   formData.value = {
@@ -54,6 +103,8 @@ const resetForm = () => {
     end_time: '',
     active: true,
   };
+  startTimeInput.value = '';
+  endTimeInput.value = '';
   editingPeriod.value = null;
 };
 
@@ -71,6 +122,9 @@ const editPeriod = (period) => {
     end_time: period.end_time,
     active: period.active,
   };
+  // Convert 24-hour times to 12-hour format for input
+  startTimeInput.value = convertTo12Hour(period.start_time);
+  endTimeInput.value = convertTo12Hour(period.end_time);
   showCreateForm.value = true;
 };
 
@@ -78,26 +132,12 @@ const editPeriod = (period) => {
 const savePeriod = async () => {
   // Validation
   if (!formData.value.start_time || !formData.value.end_time) {
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Please fill in all required fields',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(null, 'Please fill in all required fields');
     return;
   }
   
   if (formData.value.start_time >= formData.value.end_time) {
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'End time must be after start time',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(null, 'End time must be after start time');
     return;
   }
   
@@ -113,49 +153,28 @@ const savePeriod = async () => {
     
     if (editingPeriod.value) {
       // Update existing period
-      await schedulePeriodsService.update(editingPeriod.value.id, periodData);
+      const response = await schedulePeriodsService.update(editingPeriod.value.id, periodData);
       
       // Update period in local list
       const index = periods.value.findIndex(p => p.id === editingPeriod.value.id);
       if (index !== -1) {
-        periods.value[index] = { ...periods.value[index], ...periodData };
+        periods.value[index] = response.data || response;
       }
       
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Period updated successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Period updated successfully');
     } else {
       // Create new period
       const response = await schedulePeriodsService.create(periodData);
-      periods.value.push(response.data);
+      periods.value.push(response.data || response);
       
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Period created successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Period created successfully');
     }
     
     resetForm();
     showCreateForm.value = false;
   } catch (err) {
     console.error('Error saving period:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to save period',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 };
 
@@ -181,24 +200,10 @@ const confirmDeletePeriod = (period) => {
           periods.value.splice(index, 1);
         }
         
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: 'Period deleted successfully',
-          showConfirmButton: false,
-          timer: 3000
-        });
+        showSuccessToast('Period deleted successfully');
       } catch (err) {
         console.error('Error deleting period:', err);
-        Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'error',
-          title: 'Failed to delete period',
-          showConfirmButton: false,
-          timer: 3000
-        });
+        showErrorToast(err);
       }
     }
   });
@@ -210,11 +215,27 @@ const cancelForm = () => {
   showCreateForm.value = false;
 };
 
-// Format time
+// Format time to 12-hour format
 const formatTime = (timeString) => {
   if (!timeString) return '-';
-  const [hours, minutes] = timeString.split(':');
-  return `${hours}:${minutes}`;
+  
+  // Split time into hours, minutes, seconds
+  const [hours, minutes] = timeString.split(':').map(Number);
+  
+  // Convert to 12-hour format
+  const period = hours >= 12 ? 'PM' : 'AM';
+  let displayHours = hours % 12;
+  
+  // Handle 0 hours (midnight) as 12 AM
+  if (displayHours === 0) {
+    displayHours = 12;
+  }
+  
+  // Format with leading zero for hours if needed
+  const formattedHours = displayHours.toString().padStart(2, '0');
+  const formattedMinutes = minutes.toString().padStart(2, '0');
+  
+  return `${formattedHours}:${formattedMinutes} ${period}`;
 };
 
 // Calculate duration
@@ -247,7 +268,7 @@ const calculateDuration = (startTime, endTime) => {
       <button
         v-if="!showCreateForm"
         type="button"
-        class="btn btn-primary btn-sm"
+        class="btn btn-primary"
         @click="showCreatePeriodForm"
       >
         <i class="fa fa-plus me-1"></i> Add New Period
@@ -255,58 +276,68 @@ const calculateDuration = (startTime, endTime) => {
     </div>
     
     <!-- Create/Edit Form -->
-    <div v-if="showCreateForm" class="card mb-3">
-      <div class="card-body">
-        <h6 class="card-title">
-          {{ editingPeriod ? 'Edit Period' : 'Create New Period' }}
-        </h6>
-        <form @submit.prevent="savePeriod">
-          <div class="row">
-            <div class="col-md-4">
-              <label class="form-label">Start Time</label>
-              <input
-                type="time"
-                class="form-control form-control-sm"
-                v-model="formData.start_time"
-                required
-              />
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">End Time</label>
-              <input
-                type="time"
-                class="form-control form-control-sm"
-                v-model="formData.end_time"
-                required
-              />
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Active</label>
-              <div class="form-check mt-2">
+    <div v-if="showCreateForm" class="mb-3">
+      <div class="block block-rounded">
+        <div class="block-content block-content-full">
+          <h6 class="mb-3 fw-semibold">
+            <i class="fa fa-clock me-2"></i>
+            {{ editingPeriod ? 'Edit Period' : 'Create New Period' }}
+          </h6>
+          <form @submit.prevent="savePeriod">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Start Time</label>
                 <input
-                  class="form-check-input"
-                  type="checkbox"
-                  v-model="formData.active"
-                  id="activeCheckbox"
+                  type="text"
+                  class="form-control"
+                  v-model="startTimeInput"
+                  placeholder="08:00 AM"
+                  pattern="^(1[0-2]|0?[1-9]):[0-5][0-9]\s*(AM|PM)$"
+                  title="Enter time in 12-hour format (e.g., 08:00 AM)"
+                  required
                 />
-                <label class="form-check-label" for="activeCheckbox">
-                  Active
-                </label>
+                <div class="form-text">Use 12-hour format (e.g., 08:00 AM)</div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">End Time</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="endTimeInput"
+                  placeholder="09:30 AM"
+                  pattern="^(1[0-2]|0?[1-9]):[0-5][0-9]\s*(AM|PM)$"
+                  title="Enter time in 12-hour format (e.g., 09:30 AM)"
+                  required
+                />
+                <div class="form-text">Use 12-hour format (e.g., 09:30 AM)</div>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <div class="form-check form-switch mt-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    v-model="formData.active"
+                    id="activeCheckbox"
+                  />
+                  <label class="form-check-label" for="activeCheckbox">
+                    Active
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <div class="btn-group w-100">
+                  <button type="submit" class="btn btn-success">
+                    <i class="fa fa-save me-1"></i> Save
+                  </button>
+                  <button type="button" class="btn btn-secondary" @click="cancelForm">
+                    <i class="fa fa-times me-1"></i> Cancel
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="col-md-2">
-              <label class="form-label">&nbsp;</label>
-              <div class="d-grid gap-1">
-                <button type="submit" class="btn btn-success btn-sm">
-                  <i class="fa fa-save me-1"></i> Save
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" @click="cancelForm">
-                  <i class="fa fa-times me-1"></i> Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
     
@@ -322,55 +353,65 @@ const calculateDuration = (startTime, endTime) => {
       {{ error }}
     </div>
     
-    <div v-else-if="periods.length === 0" class="text-center py-4 bg-white rounded">
+    <div v-else-if="periods.length === 0" class="text-center py-4">
       <p class="text-muted mb-0">No periods found for this schedule.</p>
     </div>
     
     <div v-else>
-      <div class="table-responsive">
-        <table class="table table-sm table-striped table-hover">
-          <thead>
-            <tr>
-              <th>Start Time</th>
-              <th>End Time</th>
-              <th>Duration</th>
-              <th>Status</th>
-              <th class="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="period in periods" :key="period.id">
-              <td>{{ formatTime(period.start_time) }}</td>
-              <td>{{ formatTime(period.end_time) }}</td>
-              <td>{{ calculateDuration(period.start_time, period.end_time) }}</td>
-              <td>
-                <span :class="['badge', period.active ? 'bg-success' : 'bg-danger']">
-                  {{ period.active ? 'Active' : 'Inactive' }}
-                </span>
-              </td>
-              <td class="text-center">
-                <div class="btn-group">
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-alt-secondary"
-                    @click="editPeriod(period)"
-                    title="Edit Period"
-                  >
-                    <i class="fa fa-fw fa-pencil-alt"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-alt-secondary"
-                    @click="confirmDeletePeriod(period)"
-                    title="Delete Period"
-                  >
-                    <i class="fa fa-fw fa-times"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="block block-rounded">
+        <div class="block-content block-content-full">
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Start Time</th>
+                  <th>End Time</th>
+                  <th>Duration</th>
+                  <th>Status</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="period in periods" :key="period.id">
+                  <td>
+                    <span class="fw-semibold">{{ formatTime(period.start_time) }}</span>
+                  </td>
+                  <td>
+                    <span class="fw-semibold">{{ formatTime(period.end_time) }}</span>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary">{{ calculateDuration(period.start_time, period.end_time) }}</span>
+                  </td>
+                  <td>
+                    <span :class="['badge', period.active ? 'bg-success' : 'bg-danger']">
+                      {{ period.active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-alt-secondary"
+                        @click="editPeriod(period)"
+                        title="Edit Period"
+                      >
+                        <i class="fa fa-fw fa-pencil-alt"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-alt-secondary"
+                        @click="confirmDeletePeriod(period)"
+                        title="Delete Period"
+                      >
+                        <i class="fa fa-fw fa-times"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>

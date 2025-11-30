@@ -114,7 +114,6 @@ function saveSubject() {
     :class="{ show: show, 'd-block': show }"
     tabindex="-1"
     role="dialog"
-    @click.self="closeModal"
   >
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">

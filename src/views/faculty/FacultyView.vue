@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
+import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 
 import {
   Dataset,
@@ -182,15 +183,7 @@ async function saveFacultyMember(facultyData) {
       }
       
       // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Faculty member updated successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Faculty member updated successfully');
     } else {
       // Create new faculty
       const response = await facultyService.create(facultyData);
@@ -199,28 +192,13 @@ async function saveFacultyMember(facultyData) {
       faculty.value.unshift(response.data);
       
       // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Faculty member created successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Faculty member created successfully');
     }
     
     showFormModal.value = false;
   } catch (err) {
     console.error('Error saving faculty member:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to save faculty member',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 
@@ -246,25 +224,10 @@ async function deleteFacultyMember() {
     facultyToDelete.value = null;
     
     // Show success message
-    await new Promise(resolve => setTimeout(resolve, 100));
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'Faculty member deleted successfully',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showSuccessToast('Faculty member deleted successfully');
   } catch (err) {
     console.error('Error deleting faculty member:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to delete faculty member',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 
@@ -458,7 +421,6 @@ function formatDate(dateString) {
     :class="{ show: showDeleteModal, 'd-block': showDeleteModal }"
     tabindex="-1"
     role="dialog"
-    @click.self="cancelDelete"
   >
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">

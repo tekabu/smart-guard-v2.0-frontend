@@ -173,7 +173,6 @@ function saveStudent() {
     :class="{ show: show, 'd-block': show }"
     tabindex="-1"
     role="dialog"
-    @click.self="closeModal"
   >
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">

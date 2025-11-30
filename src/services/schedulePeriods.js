@@ -13,7 +13,11 @@ const schedulePeriodsService = {
    * Get periods by schedule ID
    */
   async getByScheduleId(scheduleId) {
-    const response = await api.get(`/api/schedule-periods?schedule_id=${scheduleId}`);
+    const response = await api.get('/api/schedule-periods', {
+      params: {
+        schedule_id: scheduleId
+      }
+    });
     return response.data;
   },
 

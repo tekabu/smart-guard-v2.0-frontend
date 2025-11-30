@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
+import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 
 import {
   Dataset,
@@ -77,7 +78,7 @@ const applyActiveFilter = async () => {
     users.value = filteredData;
   } catch (err) {
     console.error('Error applying filter:', err);
-    error.value = 'Failed to apply filter. Please try again.';
+    error.value = getErrorMessage(err);
   } finally {
     isLoading.value = false;
   }
@@ -162,26 +163,10 @@ async function createUser(userData) {
       active: true,
     };
     
-    // Show success message
-    await new Promise(resolve => setTimeout(resolve, 100));
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'User created successfully',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showSuccessToast('User created successfully');
   } catch (err) {
     console.error('Error creating user:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to create user',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 
@@ -537,7 +522,6 @@ th.sort {
     :class="{ show: showCreateModal, 'd-block': showCreateModal }"
     tabindex="-1"
     role="dialog"
-    @click.self="showCreateModal = false"
   >
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -621,7 +605,6 @@ th.sort {
     :class="{ show: showDeleteModal, 'd-block': showDeleteModal }"
     tabindex="-1"
     role="dialog"
-    @click.self="cancelDelete"
   >
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">

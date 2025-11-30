@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
+import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 
 import {
   Dataset,
@@ -166,15 +167,7 @@ async function saveSubject(subjectData) {
       }
       
       // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Subject updated successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Subject updated successfully');
     } else {
       // Create new subject
       const response = await subjectsService.create(subjectData);
@@ -183,28 +176,13 @@ async function saveSubject(subjectData) {
       subjects.value.unshift(response.data);
       
       // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Subject created successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Subject created successfully');
     }
     
     showFormModal.value = false;
   } catch (err) {
     console.error('Error saving subject:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to save subject',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 
@@ -407,7 +385,6 @@ function formatDate(dateString) {
     :class="{ show: showDeleteModal, 'd-block': showDeleteModal }"
     tabindex="-1"
     role="dialog"
-    @click.self="cancelDelete"
   >
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">

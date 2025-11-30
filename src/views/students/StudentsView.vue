@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
+import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 
 // Set default properties for SweetAlert2
 const toast = Swal.mixin({
@@ -216,17 +217,8 @@ async function saveStudent(studentData) {
       // Close modal first
       showFormModal.value = false;
       
-      // Show success message after the modal closes
-      await new Promise(resolve => setTimeout(resolve, 100));
-      console.log('Showing update success toast');
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Student updated successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      // Show success message
+      showSuccessToast('Student updated successfully');
     } else {
       // Create new student
       const response = await studentsService.create(studentData);
@@ -237,28 +229,12 @@ async function saveStudent(studentData) {
       // Close modal first
       showFormModal.value = false;
       
-      // Show success message after the modal closes
-      await new Promise(resolve => setTimeout(resolve, 100));
-      console.log('Showing create success toast');
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Student created successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      // Show success message
+      showSuccessToast('Student created successfully');
     }
   } catch (err) {
     console.error('Error saving student:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to save student',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 
@@ -284,27 +260,11 @@ async function deleteStudent() {
     showDeleteModal.value = false;
     studentToDelete.value = null;
     
-    // Show success message after the modal closes
-    await new Promise(resolve => setTimeout(resolve, 100));
-    console.log('Showing delete success toast');
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'Student deleted successfully',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    // Show success message
+    showSuccessToast('Student deleted successfully');
   } catch (err) {
     console.error('Error deleting student:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to delete student',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 
@@ -513,7 +473,6 @@ function formatDate(dateString) {
     :class="{ show: showDeleteModal, 'd-block': showDeleteModal }"
     tabindex="-1"
     role="dialog"
-    @click.self="cancelDelete"
   >
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">

@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
+import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 
 import {
   Dataset,
@@ -197,15 +198,7 @@ async function saveDeviceBoard(boardData) {
       }
       
       // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Device board updated successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Device board updated successfully');
     } else {
       // Create new board
       const response = await deviceBoardsService.create(boardData);
@@ -214,28 +207,13 @@ async function saveDeviceBoard(boardData) {
       deviceBoards.value.unshift(response.data);
       
       // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Device board created successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Device board created successfully');
     }
     
     showEditModal.value = false;
   } catch (err) {
     console.error('Error saving device board:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to save device board',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 
@@ -468,7 +446,6 @@ function formatDate(dateString) {
     :class="{ show: showDeleteModal, 'd-block': showDeleteModal }"
     tabindex="-1"
     role="dialog"
-    @click.self="cancelDelete"
   >
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">

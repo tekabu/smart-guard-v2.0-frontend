@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
+import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 
 import {
   Dataset,
@@ -155,15 +156,7 @@ async function saveRoom(roomData) {
       }
       
       // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Room updated successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Room updated successfully');
     } else {
       // Create new room
       const response = await roomsService.create(roomData);
@@ -172,28 +165,13 @@ async function saveRoom(roomData) {
       rooms.value.unshift(response.data);
       
       // Show success message
-      await new Promise(resolve => setTimeout(resolve, 100));
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Room created successfully',
-        showConfirmButton: false,
-        timer: 3000
-      });
+      showSuccessToast('Room created successfully');
     }
     
     showEditModal.value = false;
   } catch (err) {
     console.error('Error saving room:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to save room',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 
@@ -219,25 +197,10 @@ async function deleteRoom() {
     roomToDelete.value = null;
     
     // Show success message
-    await new Promise(resolve => setTimeout(resolve, 100));
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'Room deleted successfully',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showSuccessToast('Room deleted successfully');
   } catch (err) {
     console.error('Error deleting room:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to delete room',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 
@@ -419,7 +382,6 @@ function formatDate(dateString) {
     :class="{ show: showDeleteModal, 'd-block': showDeleteModal }"
     tabindex="-1"
     role="dialog"
-    @click.self="cancelDelete"
   >
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
