@@ -63,6 +63,14 @@ const schedulesService = {
   async delete(id) {
     await api.delete(`/api/schedules/${id}`);
   },
+
+  /**
+   * Get schedule count
+   */
+  async getCount() {
+    const response = await api.get('/api/schedules/count');
+    return response.data.data.count;
+  },
 };
 
 export default schedulesService;

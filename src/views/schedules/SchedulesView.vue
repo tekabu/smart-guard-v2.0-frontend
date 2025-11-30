@@ -25,6 +25,13 @@ const pageSize = ref(10);
 
 // Filter state
 const activeFilter = ref(null);
+const facultyFilter = ref(null);
+const dayFilter = ref(null);
+const roomFilter = ref(null);
+const subjectFilter = ref(null);
+
+// Dynamic filter options
+const availableDays = ref([]);
 
 // Reference data
 const facultyList = ref([]);
@@ -144,9 +151,36 @@ const applyFilters = async () => {
     const response = await schedulesService.getAll();
     let filteredData = response.data;
     
+    // Extract unique days from API data
+    const allDays = [...new Set(response.data
+      .map(schedule => schedule.day_of_week)
+      .filter(day => day))];
+    
+    availableDays.value = allDays.sort();
+    
     // Apply active filter
     if (activeFilter.value !== null) {
       filteredData = filteredData.filter(schedule => schedule.active === activeFilter.value);
+    }
+    
+    // Apply faculty filter
+    if (facultyFilter.value) {
+      filteredData = filteredData.filter(schedule => schedule.user_id === facultyFilter.value);
+    }
+    
+    // Apply day filter
+    if (dayFilter.value) {
+      filteredData = filteredData.filter(schedule => schedule.day_of_week === dayFilter.value);
+    }
+    
+    // Apply room filter
+    if (roomFilter.value) {
+      filteredData = filteredData.filter(schedule => schedule.room_id === roomFilter.value);
+    }
+    
+    // Apply subject filter
+    if (subjectFilter.value) {
+      filteredData = filteredData.filter(schedule => schedule.subject_id === subjectFilter.value);
     }
     
     schedules.value = filteredData;
@@ -172,6 +206,10 @@ const applyFilters = async () => {
 // Reset filters
 const resetFilters = () => {
   activeFilter.value = null;
+  facultyFilter.value = null;
+  dayFilter.value = null;
+  roomFilter.value = null;
+  subjectFilter.value = null;
   applyFilters();
 };
 
@@ -314,6 +352,44 @@ function formatDate(dateString) {
     <!-- Filters -->
     <BaseBlock title="Filters" content-full>
       <div class="row">
+        <div class="col-md-3">
+          <label class="form-label">Faculty</label>
+          <select class="form-select" v-model="facultyFilter" @change="applyFilters">
+            <option :value="null">All Faculty</option>
+            <option v-for="faculty in facultyList" :key="faculty.id" :value="faculty.id">
+              {{ faculty.name }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Day</label>
+          <select class="form-select" v-model="dayFilter" @change="applyFilters">
+            <option :value="null">All Days</option>
+            <option v-for="day in availableDays" :key="day" :value="day">
+              {{ day }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Room</label>
+          <select class="form-select" v-model="roomFilter" @change="applyFilters">
+            <option :value="null">All Rooms</option>
+            <option v-for="room in roomList" :key="room.id" :value="room.id">
+              {{ room.room_number }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Subject</label>
+          <select class="form-select" v-model="subjectFilter" @change="applyFilters">
+            <option :value="null">All Subjects</option>
+            <option v-for="subject in subjectList" :key="subject.id" :value="subject.id">
+              {{ subject.subject }}
+            </option>
+          </select>
+        </div>
+      </div>
+      <div class="row mt-3">
         <div class="col-md-3">
           <label class="form-label">Status</label>
           <select class="form-select" v-model="activeFilter" @change="applyFilters">

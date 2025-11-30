@@ -39,6 +39,14 @@ const devicesService = {
   async delete(id) {
     await api.delete(`/api/devices/${id}`);
   },
+
+  /**
+   * Get device count
+   */
+  async getCount() {
+    const response = await api.get('/api/devices/count');
+    return response.data.data.count;
+  },
 };
 
 export default devicesService;

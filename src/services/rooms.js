@@ -39,6 +39,14 @@ const roomsService = {
   async delete(id) {
     await api.delete(`/api/rooms/${id}`);
   },
+
+  /**
+   * Get room count
+   */
+  async getCount() {
+    const response = await api.get('/api/rooms/count');
+    return response.data.data.count;
+  },
 };
 
 export default roomsService;

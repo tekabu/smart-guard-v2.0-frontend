@@ -47,6 +47,14 @@ const usersService = {
   async delete(id) {
     await api.delete(`/api/users/${id}`);
   },
+
+  /**
+   * Get user count
+   */
+  async getCount() {
+    const response = await api.get('/api/users/count');
+    return response.data.data.count;
+  },
 };
 
 export default usersService;
