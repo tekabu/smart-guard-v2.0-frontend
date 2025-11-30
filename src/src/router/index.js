@@ -126,17 +126,17 @@ const routes = [
       },
     ],
   },
-  {
-    path: "/schedules",
-    component: LayoutBackend,
-    children: [
-      {
-        path: "",
-        name: "schedules",
-        component: Schedules,
-      },
-    ],
-  },
+  // {
+  //   path: "/schedules",
+  //   component: LayoutBackend,
+  //   children: [
+  //     {
+  //       path: "",
+  //       name: "schedules",
+  //       component: Schedules,
+  //     },
+  //   ],
+  // },
   {
     path: "/sections",
     component: LayoutBackend,

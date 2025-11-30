@@ -46,11 +46,11 @@ export default {
       icon: "si si-book-open",
       to: "subjects",
     },
-    {
-      name: "Schedules",
-      icon: "si si-calendar",
-      to: "schedules",
-    },
+    // {
+    //   name: "Schedules",
+    //   icon: "si si-calendar",
+    //   to: "schedules",
+    // },
     {
       name: "Sections",
       icon: "si si-layers",
