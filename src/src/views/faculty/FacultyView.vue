@@ -14,6 +14,8 @@ import {
 } from "vue-dataset";
 
 import FacultyFormModal from "./FacultyFormModal.vue";
+import FacultyRfidCardsModal from "./FacultyRfidCardsModal.vue";
+import FacultyFingerprintsModal from "./FacultyFingerprintsModal.vue";
 import facultyService from "@/services/faculty";
 
 // Faculty data from API
@@ -166,6 +168,11 @@ const selectedFaculty = ref(null);
 const facultyToDelete = ref(null);
 const isEditMode = ref(false);
 
+// RFID and Fingerprint modal state
+const showRfidModal = ref(false);
+const showFingerprintModal = ref(false);
+const selectedFacultyForBiometric = ref(null);
+
 // Edit faculty member
 function editFacultyMember(facultyMember) {
   selectedFaculty.value = { ...facultyMember };
@@ -254,6 +261,18 @@ function cancelDelete() {
 function formatDate(dateString) {
   if (!dateString) return '-';
   return new Date(dateString).toLocaleString();
+}
+
+// Open RFID modal
+function openRfidModal(facultyMember) {
+  selectedFacultyForBiometric.value = facultyMember;
+  showRfidModal.value = true;
+}
+
+// Open Fingerprint modal
+function openFingerprintModal(facultyMember) {
+  selectedFacultyForBiometric.value = facultyMember;
+  showFingerprintModal.value = true;
 }
 </script>
 
@@ -389,6 +408,22 @@ function formatDate(dateString) {
                             <button
                               type="button"
                               class="btn btn-sm btn-alt-secondary"
+                              @click="openRfidModal(row)"
+                              title="Manage RFID Cards"
+                            >
+                              <i class="fa fa-fw fa-id-card"></i>
+                            </button>
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-alt-secondary"
+                              @click="openFingerprintModal(row)"
+                              title="Manage Fingerprints"
+                            >
+                              <i class="fa fa-fw fa-fingerprint"></i>
+                            </button>
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-alt-secondary"
                               @click="editFacultyMember(row)"
                               title="Edit Faculty"
                             >
@@ -429,6 +464,20 @@ function formatDate(dateString) {
     :show="showFormModal"
     @update:show="showFormModal = $event"
     @save="saveFacultyMember"
+  />
+
+  <!-- RFID Cards Modal -->
+  <FacultyRfidCardsModal
+    :faculty="selectedFacultyForBiometric"
+    :show="showRfidModal"
+    @update:show="showRfidModal = $event"
+  />
+
+  <!-- Fingerprints Modal -->
+  <FacultyFingerprintsModal
+    :faculty="selectedFacultyForBiometric"
+    :show="showFingerprintModal"
+    @update:show="showFingerprintModal = $event"
   />
 
   <!-- Delete Confirmation Modal -->
