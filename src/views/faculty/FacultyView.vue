@@ -2,7 +2,7 @@
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
-import { getSortedFilterOptions } from "@/utils/naturalSort";
+import { getSortedFilterOptions, naturalCompare } from "@/utils/naturalSort";
 
 import {
   Dataset,
@@ -135,7 +135,8 @@ const applyFilters = async () => {
       .map(member => member.department)
       .filter(dept => dept))];
     
-    availableDepartments.value = allDepartments;
+    // Sort departments naturally
+    availableDepartments.value = getSortedFilterOptions(allDepartments).filter(dept => dept !== 'All');
     
     // Apply active filter
     if (activeFilter.value !== "All") {

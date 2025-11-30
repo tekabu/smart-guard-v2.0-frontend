@@ -2,7 +2,7 @@
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
-import { getSortedFilterOptions } from "@/utils/naturalSort";
+import { getSortedFilterOptions, naturalCompare } from "@/utils/naturalSort";
 
 import {
   Dataset,
@@ -36,16 +36,20 @@ const subjectFilter = ref("All");
 // Dynamic filter options
 const availableDays = ref([]);
 
+// Day order for proper sorting
+const DAY_ORDER = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+
 // Computed filter options with natural sorting
 const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
 const dayOptions = computed(() => {
   if (!availableDays.value || !availableDays.value.length) return ['All'];
-  return getSortedFilterOptions(availableDays.value);
+  const sortedDays = sortDays(availableDays.value);
+  return ['All', ...sortedDays];
 });
-const roomOptions = computed(() => {
-  if (!roomList.value || !roomList.value.length) return ['All'];
-  const roomNumbers = roomList.value.map(r => r.room_number);
-  return getSortedFilterOptions(roomNumbers);
+// Computed property for sorted rooms
+const sortedRoomList = computed(() => {
+  if (!roomList.value || !roomList.value.length) return [];
+  return [...roomList.value]; // Already sorted in fetchAllData and applyFilters
 });
 
 // Reference data
@@ -86,6 +90,28 @@ const cols = reactive([
     sort: "",
   },
 ]);
+
+// Function to sort days in proper order
+function sortDays(days) {
+  if (!days || !days.length) return [];
+  return days.sort((a, b) => {
+    const aUpper = a.toUpperCase();
+    const bUpper = b.toUpperCase();
+    const aIndex = DAY_ORDER.indexOf(aUpper);
+    const bIndex = DAY_ORDER.indexOf(bUpper);
+    if (aIndex === -1 && bIndex === -1) return naturalCompare(a, b); // fallback to natural sort
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+}
+
+// Function to normalize day display
+function normalizeDay(day) {
+  const upperDay = day.toUpperCase();
+  const index = DAY_ORDER.indexOf(upperDay);
+  return index !== -1 ? DAY_ORDER[index] : day;
+}
 
 // Sort by functionality
 const sortBy = computed(() => {
@@ -146,9 +172,24 @@ const fetchAllData = async () => {
     ]);
     
     schedules.value = schedulesRes.data;
-    facultyList.value = facultyRes.data.filter(f => f.active);
-    roomList.value = roomsRes.data.filter(r => r.active);
-    subjectList.value = subjectsRes.data.filter(s => s.active);
+    
+    // Extract and sort unique days in proper order
+    const allDays = [...new Set(schedulesRes.data
+      .map(schedule => schedule.day_of_week)
+      .filter(day => day))];
+    availableDays.value = sortDays(allDays);
+    
+    // Sort faculty by name naturally
+    const facultyData = facultyRes.data.filter(f => f.active);
+    facultyList.value = facultyData.sort((a, b) => naturalCompare(a.name, b.name));
+    
+    // Sort rooms by room_number naturally  
+    const roomData = roomsRes.data.filter(r => r.active);
+    roomList.value = roomData.sort((a, b) => naturalCompare(a.room_number, b.room_number));
+    
+    // Sort subjects by subject name naturally
+    const subjectData = subjectsRes.data.filter(s => s.active);
+    subjectList.value = subjectData.sort((a, b) => naturalCompare(a.subject, b.subject));
   } catch (err) {
     console.error('Error fetching data:', err);
     error.value = 'Failed to load schedules. Please try again.';
@@ -166,12 +207,13 @@ const applyFilters = async () => {
     const response = await schedulesService.getAll();
     let filteredData = response.data;
     
-    // Extract unique days from API data
+    // Extract unique days from API data and sort in proper order
     const allDays = [...new Set(response.data
       .map(schedule => schedule.day_of_week)
       .filter(day => day))];
     
-    availableDays.value = allDays;
+    // Sort days in proper order and assign
+    availableDays.value = sortDays(allDays);
     
     // Apply active filter
     if (activeFilter.value !== "All") {
@@ -209,9 +251,17 @@ const applyFilters = async () => {
       subjectsService.getAll()
     ]);
     
-    facultyList.value = facultyRes.data.filter(f => f.active);
-    roomList.value = roomsRes.data.filter(r => r.active);
-    subjectList.value = subjectsRes.data.filter(s => s.active);
+    // Sort faculty by name naturally
+    const facultyData = facultyRes.data.filter(f => f.active);
+    facultyList.value = facultyData.sort((a, b) => naturalCompare(a.name, b.name));
+    
+    // Sort rooms by room_number naturally  
+    const roomData = roomsRes.data.filter(r => r.active);
+    roomList.value = roomData.sort((a, b) => naturalCompare(a.room_number, b.room_number));
+    
+    // Sort subjects by subject name naturally
+    const subjectData = subjectsRes.data.filter(s => s.active);
+    subjectList.value = subjectData.sort((a, b) => naturalCompare(a.subject, b.subject));
   } catch (err) {
     console.error('Error applying filters:', err);
     error.value = 'Failed to apply filters. Please try again.';
@@ -375,19 +425,16 @@ function formatDate(dateString) {
               :key="day"
               :value="day"
             >
-              {{ day === 'All' ? 'All Days' : day }}
+              {{ day === 'All' ? 'All Days' : normalizeDay(day) }}
             </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Room</label>
           <select class="form-select" v-model="roomFilter" @change="applyFilters">
-            <option
-              v-for="(roomNumber, index) in roomOptions"
-              :key="roomNumber"
-              :value="roomNumber === 'All' ? 'All' : (roomList.value && roomList.value.find(r => r.room_number === roomNumber)?.id)"
-            >
-              {{ roomNumber === 'All' ? 'All Rooms' : roomNumber }}
+            <option :value="'All'">All Rooms</option>
+            <option v-for="room in sortedRoomList" :key="room.id" :value="room.id">
+              {{ room.room_number }}
             </option>
           </select>
         </div>

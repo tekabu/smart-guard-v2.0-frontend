@@ -2,7 +2,7 @@
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
-import { getSortedFilterOptions } from "@/utils/naturalSort";
+import { getSortedFilterOptions, naturalCompare } from "@/utils/naturalSort";
 
 // Set default properties for SweetAlert2
 const toast = Swal.mixin({
@@ -165,8 +165,9 @@ const applyFilters = async () => {
       .map(student => student.department)
       .filter(dept => dept))];
     
-    availableCourses.value = allCourses;
-    availableDepartments.value = allDepartments;
+    // Sort courses and departments naturally
+    availableCourses.value = getSortedFilterOptions(allCourses).filter(course => course !== 'All');
+    availableDepartments.value = getSortedFilterOptions(allDepartments).filter(dept => dept !== 'All');
     
     // Apply active filter
     if (activeFilter.value !== "All") {

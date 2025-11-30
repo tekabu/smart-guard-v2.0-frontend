@@ -2,7 +2,7 @@
 import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
-import { getSortedFilterOptions } from "@/utils/naturalSort";
+import { getSortedFilterOptions, naturalCompare } from "@/utils/naturalSort";
 
 import {
   Dataset,
@@ -129,14 +129,17 @@ const fetchAllData = async () => {
     ]);
     
     deviceBoards.value = boardsRes.data;
-    availableDevices.value = devicesRes.data.filter(device => device.active);
+    // Sort devices by device_id naturally
+    const deviceData = devicesRes.data.filter(device => device.active);
+    availableDevices.value = deviceData.sort((a, b) => naturalCompare(a.device_id, b.device_id));
     
     // Extract unique board types from API data
     const allBoardTypes = [...new Set(boardsRes.data
       .map(board => board.board_type)
       .filter(type => type))];
     
-    availableBoardTypes.value = allBoardTypes.sort();
+    // Sort board types naturally
+    availableBoardTypes.value = getSortedFilterOptions(allBoardTypes).filter(type => type !== 'All');
   } catch (err) {
     console.error('Error fetching device boards:', err);
     error.value = 'Failed to load device boards. Please try again.';
