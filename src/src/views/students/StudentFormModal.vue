@@ -23,7 +23,7 @@ const formData = ref({
   name: "",
   email: "",
   password: "",
-  confirmPassword: "",
+  password_confirmation: "",
   role: "STUDENT",
   active: true,
   student_id: "",
@@ -47,7 +47,7 @@ watch(
         name: newStudent.name || "",
         email: newStudent.email || "",
         password: "",
-        confirmPassword: "",
+        password_confirmation: "",
         role: "STUDENT",
         active: newStudent.active !== undefined ? newStudent.active : true,
         student_id: newStudent.student_id || "",
@@ -81,7 +81,7 @@ function resetForm() {
     name: "",
     email: "",
     password: "",
-    confirmPassword: "",
+    password_confirmation: "",
     role: "STUDENT",
     active: true,
     student_id: "",
@@ -120,8 +120,8 @@ function validateForm() {
   }
   
   // Password confirmation validation
-  if (formData.value.password && formData.value.password !== formData.value.confirmPassword) {
-    formErrors.value.confirmPassword = "Passwords do not match";
+  if (formData.value.password && formData.value.password !== formData.value.password_confirmation) {
+    formErrors.value.password_confirmation = "Passwords do not match";
   }
   
   // Year level validation
@@ -150,11 +150,11 @@ function saveStudent() {
   // Remove password fields if they're empty (for editing)
   if (isEditMode.value && !dataToSave.password) {
     delete dataToSave.password;
-    delete dataToSave.confirmPassword;
+    delete dataToSave.password_confirmation;
   }
   
-  // Remove confirmPassword field as it's not needed in the API call
-  delete dataToSave.confirmPassword;
+  // Remove password_confirmation field as it's not needed in the API call
+  delete dataToSave.password_confirmation;
   
   // Remove id if it's null (for creating new student)
   if (!dataToSave.id) {
@@ -283,14 +283,14 @@ function saveStudent() {
                   <input
                     type="password"
                     class="form-control"
-                    :class="{ 'is-invalid': formErrors.confirmPassword }"
+                    :class="{ 'is-invalid': formErrors.password_confirmation }"
                     id="student-confirm-password"
                     autocomplete="new-password"
-                    v-model="formData.confirmPassword"
+                    v-model="formData.password_confirmation"
                     placeholder="Confirm new password"
                   />
-                  <div v-if="formErrors.confirmPassword" class="invalid-feedback">
-                    {{ formErrors.confirmPassword }}
+                  <div v-if="formErrors.password_confirmation" class="invalid-feedback">
+                    {{ formErrors.password_confirmation }}
                   </div>
                 </div>
 

@@ -20,7 +20,7 @@ const formData = ref({
   name: "",
   email: "",
   password: "",
-  confirmPassword: "",
+  password_confirmation: "",
   role: "STAFF",
   active: true,
 });
@@ -35,7 +35,7 @@ watch(
         name: newUser.name,
         email: newUser.email,
         password: "",
-        confirmPassword: "",
+        password_confirmation: "",
         role: newUser.role || "STAFF",
         active: newUser.active !== undefined ? newUser.active : true,
       };
@@ -52,7 +52,7 @@ function closeModal() {
 // Save user
 function saveUser() {
   // Validate passwords match
-  if (formData.value.password && formData.value.password !== formData.value.confirmPassword) {
+  if (formData.value.password && formData.value.password !== formData.value.password_confirmation) {
     alert("Passwords do not match!");
     return;
   }
@@ -135,7 +135,7 @@ function saveUser() {
                 class="form-control"
                 id="user-confirm-password"
                 autocomplete="new-password"
-                v-model="formData.confirmPassword"
+                v-model="formData.password_confirmation"
                 placeholder="Confirm new password"
               />
             </div>
