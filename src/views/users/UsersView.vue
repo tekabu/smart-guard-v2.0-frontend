@@ -189,26 +189,10 @@ async function saveUser(updatedUser) {
     
     showEditModal.value = false;
     
-    // Show success message
-    await new Promise(resolve => setTimeout(resolve, 100));
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'User updated successfully',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showSuccessToast('User updated successfully');
   } catch (err) {
     console.error('Error saving user:', err);
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Failed to save user',
-      showConfirmButton: false,
-      timer: 3000
-    });
+    showErrorToast(err);
   }
 }
 

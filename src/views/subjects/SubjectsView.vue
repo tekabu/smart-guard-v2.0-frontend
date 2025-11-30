@@ -205,9 +205,11 @@ async function deleteSubject() {
     
     showDeleteModal.value = false;
     subjectToDelete.value = null;
+    
+    showSuccessToast('Subject deleted successfully');
   } catch (err) {
     console.error('Error deleting subject:', err);
-    alert('Failed to delete subject. Please try again.');
+    showErrorToast(err);
   }
 }
 

@@ -236,9 +236,11 @@ async function deleteDeviceBoard() {
     
     showDeleteModal.value = false;
     boardToDelete.value = null;
+    
+    showSuccessToast('Device board deleted successfully');
   } catch (err) {
     console.error('Error deleting device board:', err);
-    alert('Failed to delete device board. Please try again.');
+    showErrorToast(err);
   }
 }
 
