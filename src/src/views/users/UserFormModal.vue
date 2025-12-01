@@ -22,7 +22,7 @@ const formData = ref({
   password: "",
   password_confirmation: "",
   role: "STAFF",
-  active: true,
+  
 });
 
 // Watch for user prop changes to populate form
@@ -37,7 +37,6 @@ watch(
         password: "",
         password_confirmation: "",
         role: newUser.role || "STAFF",
-        active: newUser.active !== undefined ? newUser.active : true,
       };
     }
   },
@@ -153,22 +152,7 @@ function saveUser() {
                 <option value="STAFF">STAFF</option>
               </select>
             </div>
-
-            <!-- Active Toggle -->
-            <div class="mb-3">
-              <div class="form-check form-switch">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="user-active"
-                  v-model="formData.active"
-                />
-                <label class="form-check-label" for="user-active">
-                  Active
-                </label>
-              </div>
-            </div>
-          </form>
+</form>
         </div>
         <div class="modal-footer">
           <button

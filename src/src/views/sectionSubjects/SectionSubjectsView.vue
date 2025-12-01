@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
 import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
-import { naturalCompare } from "@/utils/naturalSort";
+import { naturalCompare, getSortedFilterOptions } from "@/utils/naturalSort";
 
 import {
   Dataset,
@@ -24,10 +24,32 @@ const isLoading = ref(true);
 const error = ref(null);
 const pageSize = ref(10);
 
-// Available options for dropdowns
+// Available options for dropdowns (for modals)
 const availableSections = ref([]);
 const availableSubjects = ref([]);
 const availableFaculty = ref([]);
+
+// Computed filter options with natural sorting from table data
+const sectionOptions = computed(() => {
+  if (!sectionSubjects.value || !sectionSubjects.value.length) return ['All'];
+  const sections = [...new Set(sectionSubjects.value
+    .map(ss => ss.section?.section)
+    .filter(s => s))];
+  return getSortedFilterOptions(sections);
+});
+const subjectOptions = computed(() => {
+  if (!sectionSubjects.value || !sectionSubjects.value.length) return ['All'];
+  const subjects = [...new Set(sectionSubjects.value
+    .map(ss => ss.subject?.subject)
+    .filter(s => s))];
+  return getSortedFilterOptions(subjects);
+});
+
+// Filters
+const filters = ref({
+  section: "All",
+  subject: "All"
+});
 
 // Helper variables
 const cols = reactive([
@@ -127,6 +149,40 @@ const fetchAllData = async () => {
   } finally {
     isLoading.value = false;
   }
+};
+
+// Apply filters (now automatic on change)
+const applyFilters = async () => {
+  try {
+    isLoading.value = true;
+    error.value = null;
+
+    const filterData = {};
+    if (filters.value.section !== "All") filterData.section = filters.value.section;
+    if (filters.value.subject !== "All") filterData.subject = filters.value.subject;
+
+    if (Object.keys(filterData).length > 0) {
+      const response = await sectionSubjectsService.getFiltered(filterData);
+      sectionSubjects.value = response.data;
+    } else {
+      const response = await sectionSubjectsService.getAll();
+      sectionSubjects.value = response.data;
+    }
+  } catch (err) {
+    console.error('Error applying filters:', err);
+    error.value = 'Failed to apply filters. Please try again.';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Reset filters
+const resetFilters = () => {
+  filters.value = {
+    section: "All",
+    subject: "All"
+  };
+  fetchAllData();
 };
 
 // Modal state
@@ -241,6 +297,42 @@ function formatDate(dateString) {
 
   <!-- Page Content -->
   <div class="content">
+    <!-- Filters -->
+    <BaseBlock title="Filters" content-full>
+      <div class="row">
+        <div class="col-md-4">
+          <label class="form-label">Section</label>
+          <select class="form-select" v-model="filters.section" @change="applyFilters">
+            <option
+              v-for="section in sectionOptions"
+              :key="section"
+              :value="section"
+            >
+              {{ section === 'All' ? 'All Sections' : section }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Subject</label>
+          <select class="form-select" v-model="filters.subject" @change="applyFilters">
+            <option
+              v-for="subject in subjectOptions"
+              :key="subject"
+              :value="subject"
+            >
+              {{ subject === 'All' ? 'All Subjects' : subject }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-secondary w-100" @click="resetFilters">
+            <i class="fa fa-undo me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+    </BaseBlock>
+
     <BaseBlock title="Section Subjects List" content-full>
       <!-- Loading state -->
       <div v-if="isLoading" class="text-center py-5">

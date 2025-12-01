@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
 import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
-import { naturalCompare } from "@/utils/naturalSort";
+import { naturalCompare, getSortedFilterOptions } from "@/utils/naturalSort";
 
 import {
   Dataset,
@@ -23,9 +23,55 @@ const isLoading = ref(true);
 const error = ref(null);
 const pageSize = ref(10);
 
-// Available options for dropdowns
+// Available options for dropdowns (for modals)
 const availableSectionSubjects = ref([]);
 const availableRooms = ref([]);
+
+// Computed filter options with natural sorting from table data
+const sectionOptions = computed(() => {
+  if (!schedules.value || !schedules.value.length) return ['All'];
+  const sections = [...new Set(schedules.value
+    .map(s => s.section_subject?.section?.section)
+    .filter(s => s))];
+  return getSortedFilterOptions(sections);
+});
+const subjectOptions = computed(() => {
+  if (!schedules.value || !schedules.value.length) return ['All'];
+  const subjects = [...new Set(schedules.value
+    .map(s => s.section_subject?.subject?.subject)
+    .filter(s => s))];
+  return getSortedFilterOptions(subjects);
+});
+const dayOptions = computed(() => {
+  if (!schedules.value || !schedules.value.length) return ['All'];
+  const days = [...new Set(schedules.value
+    .map(s => s.day_of_week)
+    .filter(d => d))];
+  return getSortedFilterOptions(days);
+});
+const roomOptions = computed(() => {
+  if (!schedules.value || !schedules.value.length) return ['All'];
+  const rooms = [...new Set(schedules.value
+    .map(s => s.room?.room_number)
+    .filter(r => r))];
+  return getSortedFilterOptions(rooms);
+});
+
+// Filters
+const filters = ref({
+  section: "All",
+  subject: "All",
+  day: "All",
+  room: "All"
+});
+
+// Computed property to format section subjects for modal dropdown
+const sectionSubjectsForModal = computed(() => {
+  return availableSectionSubjects.value.map(ss => ({
+    id: ss.id,
+    label: `${ss.section?.section || ''} - ${ss.subject?.subject || ''} (${ss.faculty?.name || ''})`
+  }));
+});
 
 // Helper variables
 const cols = reactive([
@@ -116,17 +162,21 @@ const fetchAllData = async () => {
     isLoading.value = true;
     error.value = null;
 
-    // Fetch schedules, section subjects (options), and rooms in parallel
+    // Fetch schedules, section subjects (full data for filters), and rooms in parallel
     const [schedulesRes, sectionSubjectsRes, roomsRes] = await Promise.all([
       sectionSubjectSchedulesService.getAll(),
-      sectionSubjectsService.getOptions(),
+      sectionSubjectsService.getAll(),
       roomsService.getAll()
     ]);
 
     schedules.value = schedulesRes.data;
 
-    // Sort section subjects by label
-    availableSectionSubjects.value = sectionSubjectsRes.data.sort((a, b) => naturalCompare(a.label, b.label));
+    // Sort section subjects naturally
+    availableSectionSubjects.value = sectionSubjectsRes.data.sort((a, b) => {
+      const aLabel = `${a.section?.section || ''} - ${a.subject?.subject || ''}`;
+      const bLabel = `${b.section?.section || ''} - ${b.subject?.subject || ''}`;
+      return naturalCompare(aLabel, bLabel);
+    });
 
     // Sort rooms naturally by room name
     availableRooms.value = roomsRes.data.sort((a, b) => naturalCompare(a.room, b.room));
@@ -136,6 +186,44 @@ const fetchAllData = async () => {
   } finally {
     isLoading.value = false;
   }
+};
+
+// Apply filters (now automatic on change)
+const applyFilters = async () => {
+  try {
+    isLoading.value = true;
+    error.value = null;
+
+    const filterData = {};
+    if (filters.value.section !== "All") filterData.section = filters.value.section;
+    if (filters.value.subject !== "All") filterData.subject = filters.value.subject;
+    if (filters.value.day !== "All") filterData.day_of_week = filters.value.day;
+    if (filters.value.room !== "All") filterData.room = filters.value.room;
+
+    if (Object.keys(filterData).length > 0) {
+      const response = await sectionSubjectSchedulesService.getFiltered(filterData);
+      schedules.value = response.data;
+    } else {
+      const response = await sectionSubjectSchedulesService.getAll();
+      schedules.value = response.data;
+    }
+  } catch (err) {
+    console.error('Error applying filters:', err);
+    error.value = 'Failed to apply filters. Please try again.';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Reset filters
+const resetFilters = () => {
+  filters.value = {
+    section: "All",
+    subject: "All",
+    day: "All",
+    room: "All"
+  };
+  fetchAllData();
 };
 
 // Modal state
@@ -260,6 +348,66 @@ function formatTime(time24) {
 
   <!-- Page Content -->
   <div class="content">
+    <!-- Filters -->
+    <BaseBlock title="Filters" content-full>
+      <div class="row">
+        <div class="col-md-3">
+          <label class="form-label">Section</label>
+          <select class="form-select" v-model="filters.section" @change="applyFilters">
+            <option
+              v-for="section in sectionOptions"
+              :key="section"
+              :value="section"
+            >
+              {{ section === 'All' ? 'All Sections' : section }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Subject</label>
+          <select class="form-select" v-model="filters.subject" @change="applyFilters">
+            <option
+              v-for="subject in subjectOptions"
+              :key="subject"
+              :value="subject"
+            >
+              {{ subject === 'All' ? 'All Subjects' : subject }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Day</label>
+          <select class="form-select" v-model="filters.day" @change="applyFilters">
+            <option
+              v-for="day in dayOptions"
+              :key="day"
+              :value="day"
+            >
+              {{ day === 'All' ? 'All Days' : day }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Room</label>
+          <select class="form-select" v-model="filters.room" @change="applyFilters">
+            <option
+              v-for="room in roomOptions"
+              :key="room"
+              :value="room"
+            >
+              {{ room === 'All' ? 'All Rooms' : room }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-secondary w-100" @click="resetFilters">
+            <i class="fa fa-undo me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+    </BaseBlock>
+
     <BaseBlock title="Schedules List" content-full>
       <!-- Loading state -->
       <div v-if="isLoading" class="text-center py-5">
@@ -377,7 +525,7 @@ function formatTime(time24) {
   <SectionSubjectScheduleFormModal
     :schedule="selectedSchedule"
     :show="showEditModal"
-    :sectionSubjects="availableSectionSubjects"
+    :sectionSubjects="sectionSubjectsForModal"
     :rooms="availableRooms"
     @update:show="showEditModal = $event"
     @save="saveSchedule"

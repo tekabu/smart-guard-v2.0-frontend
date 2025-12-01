@@ -26,7 +26,6 @@ const formData = ref({
   id: null,
   room_number: "",
   device_id: null,
-  active: true,
 });
 
 // Form validation
@@ -42,7 +41,6 @@ watch(
         id: newRoom.id,
         room_number: newRoom.room_number || "",
         device_id: newRoom.device_id || null,
-        active: newRoom.active !== undefined ? newRoom.active : true,
       };
     } else {
       // Creating new room - reset form
@@ -68,7 +66,6 @@ function resetForm() {
     id: null,
     room_number: "",
     device_id: null,
-    active: true,
   };
   formErrors.value = {};
 }
@@ -118,7 +115,7 @@ function saveRoom() {
 const fetchDevices = async () => {
   try {
     const response = await devicesService.getAll();
-    availableDevices.value = response.data.filter(device => device.active);
+    availableDevices.value = response.data;
   } catch (err) {
     console.error('Error fetching devices:', err);
   }
@@ -197,21 +194,6 @@ watch(
                   </select>
                   <div class="form-text">Assign a device to this room (optional)</div>
                 </div>
-              </div>
-            </div>
-
-            <!-- Active Toggle -->
-            <div class="mb-3">
-              <div class="form-check form-switch">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="room-active"
-                  v-model="formData.active"
-                />
-                <label class="form-check-label" for="room-active">
-                  Active
-                </label>
               </div>
             </div>
           </form>

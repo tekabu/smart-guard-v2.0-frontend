@@ -37,7 +37,7 @@ const formData = ref({
   board_type: "FINGERPRINT",
   mac_address: "",
   firmware_version: "",
-  active: true,
+  
 });
 
 // Form validation
@@ -55,7 +55,6 @@ watch(
         board_type: newBoard.board_type || "FINGERPRINT",
         mac_address: newBoard.mac_address || "",
         firmware_version: newBoard.firmware_version || "",
-        active: newBoard.active !== undefined ? newBoard.active : true,
       };
     } else {
       // Creating new board - reset form
@@ -83,7 +82,7 @@ function resetForm() {
     board_type: "FINGERPRINT",
     mac_address: "",
     firmware_version: "",
-    active: true,
+    
   };
   formErrors.value = {};
 }
@@ -238,22 +237,7 @@ function saveBoard() {
                 </div>
               </div>
             </div>
-
-            <!-- Active Toggle -->
-            <div class="mb-3">
-              <div class="form-check form-switch">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="board-active"
-                  v-model="formData.active"
-                />
-                <label class="form-check-label" for="board-active">
-                  Active
-                </label>
-              </div>
-            </div>
-          </form>
+</form>
         </div>
         <div class="modal-footer">
           <button

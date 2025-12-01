@@ -47,7 +47,7 @@ const formData = ref({
   day_of_week: "MONDAY",
   room_id: null,
   subject_id: null,
-  active: true,
+  
 });
 
 // Form validation
@@ -65,7 +65,6 @@ watch(
         day_of_week: newSchedule.day_of_week || "MONDAY",
         room_id: newSchedule.room_id || null,
         subject_id: newSchedule.subject_id || null,
-        active: newSchedule.active !== undefined ? newSchedule.active : true,
       };
     } else {
       // Creating new schedule - reset form
@@ -93,7 +92,7 @@ function resetForm() {
     day_of_week: "MONDAY",
     room_id: null,
     subject_id: null,
-    active: true,
+    
   };
   formErrors.value = {};
 }
@@ -271,22 +270,7 @@ function saveSchedule() {
                 </div>
               </div>
             </div>
-
-            <!-- Active Toggle -->
-            <div class="mb-3">
-              <div class="form-check form-switch">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="schedule-active"
-                  v-model="formData.active"
-                />
-                <label class="form-check-label" for="schedule-active">
-                  Active
-                </label>
-              </div>
-            </div>
-          </form>
+</form>
         </div>
         <div class="modal-footer">
           <button

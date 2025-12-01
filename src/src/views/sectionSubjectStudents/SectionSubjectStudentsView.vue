@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
 import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
-import { naturalCompare } from "@/utils/naturalSort";
+import { naturalCompare, getSortedFilterOptions } from "@/utils/naturalSort";
 
 import {
   Dataset,
@@ -28,6 +28,44 @@ const pageSize = ref(10);
 const availableSectionSubjects = ref([]);
 const availableStudents = ref([]);
 
+// Computed filter options with natural sorting
+const sectionOptions = computed(() => {
+  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return ['All'];
+  const sections = [...new Set(availableSectionSubjects.value
+    .map(ss => ss.section?.section)
+    .filter(s => s))];
+  return getSortedFilterOptions(sections);
+});
+const subjectOptions = computed(() => {
+  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return ['All'];
+  const subjects = [...new Set(availableSectionSubjects.value
+    .map(ss => ss.subject?.subject)
+    .filter(s => s))];
+  return getSortedFilterOptions(subjects);
+});
+const facultyOptions = computed(() => {
+  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return ['All'];
+  const faculty = [...new Set(availableSectionSubjects.value
+    .map(ss => ss.faculty?.name)
+    .filter(f => f))];
+  return getSortedFilterOptions(faculty);
+});
+
+// Filters
+const filters = ref({
+  section: "All",
+  subject: "All",
+  faculty: "All"
+});
+
+// Computed property to format section subjects for modal dropdown
+const sectionSubjectsForModal = computed(() => {
+  return availableSectionSubjects.value.map(ss => ({
+    id: ss.id,
+    label: `${ss.section?.section || ''} - ${ss.subject?.subject || ''} (${ss.faculty?.name || ''})`
+  }));
+});
+
 // Helper variables
 const cols = reactive([
   {
@@ -38,6 +76,11 @@ const cols = reactive([
   {
     name: "Subject",
     field: "section_subject.subject.subject",
+    sort: "",
+  },
+  {
+    name: "Faculty",
+    field: "section_subject.faculty.name",
     sort: "",
   },
   {
@@ -102,17 +145,21 @@ const fetchAllData = async () => {
     isLoading.value = true;
     error.value = null;
 
-    // Fetch section subject students, section subjects (options), and students in parallel
+    // Fetch section subject students, section subjects (full data for filters), and students in parallel
     const [sectionSubjectStudentsRes, sectionSubjectsRes, studentsRes] = await Promise.all([
       sectionSubjectStudentsService.getAll(),
-      sectionSubjectsService.getOptions(),
+      sectionSubjectsService.getAll(),
       usersService.getByRole('STUDENT')
     ]);
 
     sectionSubjectStudents.value = sectionSubjectStudentsRes.data;
 
-    // Sort section subjects by label
-    availableSectionSubjects.value = sectionSubjectsRes.data.sort((a, b) => naturalCompare(a.label, b.label));
+    // Sort section subjects naturally
+    availableSectionSubjects.value = sectionSubjectsRes.data.sort((a, b) => {
+      const aLabel = `${a.section?.section || ''} - ${a.subject?.subject || ''}`;
+      const bLabel = `${b.section?.section || ''} - ${b.subject?.subject || ''}`;
+      return naturalCompare(aLabel, bLabel);
+    });
 
     // Sort students naturally by name
     availableStudents.value = studentsRes.data.sort((a, b) => naturalCompare(a.name, b.name));
@@ -122,6 +169,42 @@ const fetchAllData = async () => {
   } finally {
     isLoading.value = false;
   }
+};
+
+// Apply filters (now automatic on change)
+const applyFilters = async () => {
+  try {
+    isLoading.value = true;
+    error.value = null;
+
+    const filterData = {};
+    if (filters.value.section !== "All") filterData.section = filters.value.section;
+    if (filters.value.subject !== "All") filterData.subject = filters.value.subject;
+    if (filters.value.faculty !== "All") filterData.faculty = filters.value.faculty;
+
+    if (Object.keys(filterData).length > 0) {
+      const response = await sectionSubjectStudentsService.getFiltered(filterData);
+      sectionSubjectStudents.value = response.data;
+    } else {
+      const response = await sectionSubjectStudentsService.getAll();
+      sectionSubjectStudents.value = response.data;
+    }
+  } catch (err) {
+    console.error('Error applying filters:', err);
+    error.value = 'Failed to apply filters. Please try again.';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Reset filters
+const resetFilters = () => {
+  filters.value = {
+    section: "All",
+    subject: "All",
+    faculty: "All"
+  };
+  fetchAllData();
 };
 
 // Modal state
@@ -256,6 +339,54 @@ function formatDate(dateString) {
 
   <!-- Page Content -->
   <div class="content">
+    <!-- Filters -->
+    <BaseBlock title="Filters" content-full>
+      <div class="row">
+        <div class="col-md-3">
+          <label class="form-label">Section</label>
+          <select class="form-select" v-model="filters.section" @change="applyFilters">
+            <option
+              v-for="section in sectionOptions"
+              :key="section"
+              :value="section"
+            >
+              {{ section === 'All' ? 'All Sections' : section }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Subject</label>
+          <select class="form-select" v-model="filters.subject" @change="applyFilters">
+            <option
+              v-for="subject in subjectOptions"
+              :key="subject"
+              :value="subject"
+            >
+              {{ subject === 'All' ? 'All Subjects' : subject }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Faculty</label>
+          <select class="form-select" v-model="filters.faculty" @change="applyFilters">
+            <option
+              v-for="faculty in facultyOptions"
+              :key="faculty"
+              :value="faculty"
+            >
+              {{ faculty === 'All' ? 'All Faculty' : faculty }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-secondary w-100" @click="resetFilters">
+            <i class="fa fa-undo me-1"></i> Reset
+          </button>
+        </div>
+      </div>
+    </BaseBlock>
+
     <BaseBlock title="Student Subjects List" content-full>
       <!-- Loading state -->
       <div v-if="isLoading" class="text-center py-5">
@@ -324,6 +455,10 @@ function formatDate(dateString) {
                         <td>{{ row.section_subject?.section?.section || '-' }}</td>
                         <td>{{ row.section_subject?.subject?.subject || '-' }}</td>
                         <td>
+                          <div>{{ row.section_subject?.faculty?.name || '-' }}</div>
+                          <small class="text-muted">{{ row.section_subject?.faculty?.faculty_id || '' }}</small>
+                        </td>
+                        <td>
                           <div>{{ row.student?.name || '-' }}</div>
                           <small class="text-muted">{{ row.student?.student_id || '' }}</small>
                         </td>
@@ -371,7 +506,7 @@ function formatDate(dateString) {
   <SectionSubjectStudentFormModal
     :sectionSubjectStudent="selectedSectionSubjectStudent"
     :show="showEditModal"
-    :sectionSubjects="availableSectionSubjects"
+    :sectionSubjects="sectionSubjectsForModal"
     :students="availableStudents"
     @update:show="showEditModal = $event"
     @save="saveSectionSubjectStudent"
@@ -380,7 +515,7 @@ function formatDate(dateString) {
   <!-- Bulk Add Students Modal -->
   <BulkAddStudentsModal
     :show="showBulkAddModal"
-    :sectionSubjects="availableSectionSubjects"
+    :sectionSubjects="sectionSubjectsForModal"
     :existingStudents="sectionSubjectStudents"
     @update:show="showBulkAddModal = $event"
     @saved="handleBulkSaved"

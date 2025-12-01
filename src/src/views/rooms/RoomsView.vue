@@ -22,12 +22,6 @@ const isLoading = ref(true);
 const error = ref(null);
 const pageSize = ref(10);
 
-// Filter state
-const activeFilter = ref("All");
-
-// Computed filter options with natural sorting
-const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
-
 // Helper variables
 const cols = reactive([
   {
@@ -38,11 +32,6 @@ const cols = reactive([
   {
     name: "Device",
     field: "device.device_id",
-    sort: "",
-  },
-  {
-    name: "Status",
-    field: "active",
     sort: "",
   },
   {
@@ -92,7 +81,6 @@ function onSort(event, i) {
 
 // Reset filters
 const resetFilters = () => {
-  activeFilter.value = "All";
   applyFilters();
 };
 
@@ -109,16 +97,7 @@ const applyFilters = async () => {
     error.value = null;
     
     const response = await roomsService.getAll();
-    let filteredData = response.data;
-    
-    // Apply active filter
-    if (activeFilter.value !== "All") {
-      filteredData = filteredData.filter(room => 
-        room.active === (activeFilter.value === 'Active')
-      );
-    }
-    
-    rooms.value = filteredData;
+    rooms.value = response.data;
   } catch (err) {
     console.error('Error applying filters:', err);
     error.value = 'Failed to apply filters. Please try again.';
@@ -241,32 +220,6 @@ function formatDate(dateString) {
 
   <!-- Page Content -->
   <div class="content">
-    <!-- Filters -->
-    <BaseBlock title="Filters" content-full>
-      <div class="row">
-        <div class="col-md-3">
-          <label class="form-label">Status</label>
-          <select class="form-select" v-model="activeFilter" @change="applyFilters">
-            <option
-              v-for="status in statusOptions"
-              :key="status"
-              :value="status"
-            >
-              {{ status === 'All' ? 'All Status' : status }}
-            </option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">&nbsp;</label>
-          <button class="btn btn-secondary w-100" @click="resetFilters">
-            <i class="fa fa-undo me-1"></i> Reset
-          </button>
-        </div>
-        <div class="col-md-6">
-          <!-- Spacer -->
-        </div>
-      </div>
-    </BaseBlock>
 
     <BaseBlock title="Room List" content-full>
       <!-- Loading state -->
@@ -288,7 +241,7 @@ function formatDate(dateString) {
           v-slot="{ ds }"
           :ds-data="rooms"
           :ds-sortby="sortBy"
-          :ds-search-in="['room_number', 'device.device_id', 'active']"
+          :ds-search-in="['room_number', 'device.device_id']"
           :ds-page-size="pageSize"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
@@ -335,11 +288,6 @@ function formatDate(dateString) {
                       <tr>
                         <td style="min-width: 150px">{{ row.room_number }}</td>
                         <td>{{ row.device?.device_id || '-' }}</td>
-                        <td>
-                          <span :class="['badge', row.active ? 'bg-success' : 'bg-danger']">
-                            {{ row.active ? 'Active' : 'Inactive' }}
-                          </span>
-                        </td>
                         <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">
                           <div class="btn-group">

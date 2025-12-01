@@ -22,22 +22,11 @@ const isLoading = ref(true);
 const error = ref(null);
 const pageSize = ref(10);
 
-// Filter state
-const activeFilter = ref("All");
-
-// Computed filter options with natural sorting
-const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
-
 // Helper variables
 const cols = reactive([
   {
     name: "Subject",
     field: "subject",
-    sort: "",
-  },
-  {
-    name: "Status",
-    field: "active",
     sort: "",
   },
   {
@@ -114,16 +103,7 @@ const applyFilters = async () => {
     error.value = null;
     
     const response = await subjectsService.getAll();
-    let filteredData = response.data;
-    
-    // Apply active filter
-    if (activeFilter.value !== "All") {
-      filteredData = filteredData.filter(subject => 
-        subject.active === (activeFilter.value === 'Active')
-      );
-    }
-    
-    subjects.value = filteredData;
+    subjects.value = response.data;
   } catch (err) {
     console.error('Error applying filters:', err);
     error.value = 'Failed to apply filters. Please try again.';
@@ -134,7 +114,6 @@ const applyFilters = async () => {
 
 // Reset filters
 const resetFilters = () => {
-  activeFilter.value = "All";
   applyFilters();
 };
 
@@ -248,29 +227,6 @@ function formatDate(dateString) {
 
   <!-- Page Content -->
   <div class="content">
-    <!-- Filters -->
-    <BaseBlock title="Filters" content-full>
-      <div class="row">
-        <div class="col-md-3">
-          <label class="form-label">Status</label>
-          <select class="form-select" v-model="activeFilter" @change="applyFilters">
-            <option
-              v-for="status in statusOptions"
-              :key="status"
-              :value="status"
-            >
-              {{ status === 'All' ? 'All Status' : status }}
-            </option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">&nbsp;</label>
-          <button class="btn btn-secondary w-100" @click="resetFilters()">
-            <i class="fa fa-undo me-1"></i> Reset
-          </button>
-        </div>
-      </div>
-    </BaseBlock>
 
     <BaseBlock title="Subject List" content-full>
       <!-- Loading state -->
@@ -292,7 +248,7 @@ function formatDate(dateString) {
           v-slot="{ ds }"
           :ds-data="subjects"
           :ds-sortby="sortBy"
-          :ds-search-in="['subject', 'active']"
+          :ds-search-in="['subject']"
           :ds-page-size="pageSize"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
@@ -338,11 +294,6 @@ function formatDate(dateString) {
                     <template #default="{ row, rowIndex }">
                       <tr>
                         <td style="min-width: 200px">{{ row.subject }}</td>
-                        <td>
-                          <span :class="['badge', row.active ? 'bg-success' : 'bg-danger']">
-                            {{ row.active ? 'Active' : 'Inactive' }}
-                          </span>
-                        </td>
                         <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">
                           <div class="btn-group">

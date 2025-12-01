@@ -30,7 +30,6 @@ const availableDevices = ref([]);
 const availableBoardTypes = ref([]);
 
 // Computed filter options with natural sorting
-const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
 const boardTypeOptions = computed(() => {
   if (!availableBoardTypes.value || !availableBoardTypes.value.length) return ['All'];
   return getSortedFilterOptions(availableBoardTypes.value);
@@ -44,8 +43,7 @@ const deviceOptions = computed(() => {
 // Filters
 const filters = ref({
   device_id: "All",
-  board_type: "All",
-  active: "All"
+  board_type: "All"
 });
 
 // Helper variables
@@ -58,11 +56,6 @@ const cols = reactive([
   {
     name: "Board Type",
     field: "board_type",
-    sort: "",
-  },
-  {
-    name: "Status",
-    field: "active",
     sort: "",
   },
   {
@@ -130,7 +123,7 @@ const fetchAllData = async () => {
     
     deviceBoards.value = boardsRes.data;
     // Sort devices by device_id naturally
-    const deviceData = devicesRes.data.filter(device => device.active);
+    const deviceData = devicesRes.data;
     availableDevices.value = deviceData.sort((a, b) => naturalCompare(a.device_id, b.device_id));
     
     // Extract unique board types from API data
@@ -163,8 +156,7 @@ const applyFilters = async () => {
       }
     }
     if (filters.value.board_type !== "All") filterData.board_type = filters.value.board_type;
-    if (filters.value.active !== "All") filterData.active = filters.value.active === 'Active';
-    
+
     if (Object.keys(filterData).length > 0) {
       const response = await deviceBoardsService.getFiltered(filterData);
       deviceBoards.value = response.data;
@@ -184,8 +176,7 @@ const applyFilters = async () => {
 const resetFilters = () => {
   filters.value = {
     device_id: "All",
-    board_type: "All",
-    active: "All"
+    board_type: "All"
   };
   fetchAllData();
 };
@@ -305,7 +296,7 @@ function formatDate(dateString) {
     <!-- Filters -->
     <BaseBlock title="Filters" content-full>
       <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-4">
           <label class="form-label">Device</label>
           <select class="form-select" v-model="filters.device_id" @change="applyFilters">
             <option
@@ -317,7 +308,7 @@ function formatDate(dateString) {
             </option>
           </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
           <label class="form-label">Board Type</label>
           <select class="form-select" v-model="filters.board_type" @change="applyFilters">
             <option
@@ -329,19 +320,7 @@ function formatDate(dateString) {
             </option>
           </select>
         </div>
-        <div class="col-md-3">
-          <label class="form-label">Status</label>
-          <select class="form-select" v-model="filters.active" @change="applyFilters">
-            <option
-              v-for="status in statusOptions"
-              :key="status"
-              :value="status"
-            >
-              {{ status === 'All' ? 'All Status' : status }}
-            </option>
-          </select>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
           <label class="form-label">&nbsp;</label>
           <button class="btn btn-secondary w-100" @click="resetFilters">
             <i class="fa fa-undo me-1"></i> Reset
@@ -371,7 +350,7 @@ function formatDate(dateString) {
           :ds-page-size="pageSize"
 :ds-data="deviceBoards"
           :ds-sortby="sortBy"
-          :ds-search-in="['device.device_id', 'board_type', 'active']"
+          :ds-search-in="['device.device_id', 'board_type']"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
@@ -418,11 +397,6 @@ function formatDate(dateString) {
                         <td>{{ row.device?.device_id || '-' }}</td>
                         <td>
                           <span class="badge bg-info">{{ row.board_type }}</span>
-                        </td>
-                        <td>
-                          <span :class="['badge', row.active ? 'bg-success' : 'bg-danger']">
-                            {{ row.active ? 'Active' : 'Inactive' }}
-                          </span>
                         </td>
                         <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">

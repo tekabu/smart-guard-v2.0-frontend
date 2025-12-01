@@ -22,7 +22,6 @@ const formData = ref({
   id: null,
   device_id: "",
   door_open_duration_seconds: 5,
-  active: true,
 });
 
 // Form validation
@@ -38,7 +37,6 @@ watch(
         id: newDevice.id,
         device_id: newDevice.device_id || "",
         door_open_duration_seconds: newDevice.door_open_duration_seconds || 5,
-        active: newDevice.active !== undefined ? newDevice.active : true,
       };
     } else {
       // Creating new device - reset form
@@ -64,7 +62,6 @@ function resetForm() {
     id: null,
     device_id: "",
     door_open_duration_seconds: 5,
-    active: true,
   };
   formErrors.value = {};
 }
@@ -176,21 +173,6 @@ function saveDevice() {
                   </div>
                   <div class="form-text">Duration must be between 1 and 60 seconds</div>
                 </div>
-              </div>
-            </div>
-
-            <!-- Active Toggle -->
-            <div class="mb-3">
-              <div class="form-check form-switch">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="device-active"
-                  v-model="formData.active"
-                />
-                <label class="form-check-label" for="device-active">
-                  Active
-                </label>
               </div>
             </div>
           </form>

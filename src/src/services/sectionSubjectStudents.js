@@ -10,6 +10,20 @@ const sectionSubjectStudentsService = {
   },
 
   /**
+   * Get section subject students with filters
+   */
+  async getFiltered(filters = {}) {
+    const params = new URLSearchParams();
+
+    if (filters.section) params.append('section', filters.section);
+    if (filters.subject) params.append('subject', filters.subject);
+    if (filters.faculty) params.append('faculty', filters.faculty);
+
+    const response = await api.get(`/api/section-subject-students?${params.toString()}`);
+    return response.data;
+  },
+
+  /**
    * Get section subject student by ID
    */
   async getById(id) {

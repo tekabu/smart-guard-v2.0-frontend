@@ -23,11 +23,9 @@ const error = ref(null);
 const pageSize = ref(10);
 
 // Filter state
-const activeFilter = ref("All");
 const roleFilter = ref("All");
 
 // Computed filter options with natural sorting
-const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
 const roleOptions = computed(() => ['All', 'ADMIN', 'STAFF']);
 
 // Helper variables
@@ -48,11 +46,6 @@ const cols = reactive([
     sort: "",
   },
   {
-    name: "Status",
-    field: "active",
-    sort: "",
-  },
-  {
     name: "Last Updated",
     field: "updated_at",
     sort: "",
@@ -66,17 +59,10 @@ const applyFilters = async () => {
     error.value = null;
     
     const response = await usersService.getAll();
-    let filteredData = response.data.filter(user => 
+    let filteredData = response.data.filter(user =>
       user.role === 'ADMIN' || user.role === 'STAFF'
     );
-    
-    // Apply active filter
-    if (activeFilter.value !== "All") {
-      filteredData = filteredData.filter(user => 
-        user.active === (activeFilter.value === 'Active')
-      );
-    }
-    
+
     // Apply role filter
     if (roleFilter.value !== "All") {
       filteredData = filteredData.filter(user => user.role === roleFilter.value);
@@ -148,7 +134,6 @@ const newUser = ref({
   email: "",
   password: "",
   role: "STAFF",
-  active: true,
 });
 
 // Create new user
@@ -167,7 +152,6 @@ async function createUser(userData) {
       email: "",
       password: "",
       role: "STAFF",
-      active: true,
     };
     
     showSuccessToast('User created successfully');
@@ -241,7 +225,6 @@ function cancelDelete() {
 
 // Reset filters
 const resetFilters = () => {
-  activeFilter.value = "All";
   roleFilter.value = "All";
   applyFilters();
 };
@@ -339,7 +322,7 @@ th.sort {
 
   <!-- Page Content -->
   <div class="content">
-    <!-- Active Filter -->
+    <!-- Filters -->
     <BaseBlock title="Filters" content-full>
       <div class="row">
         <div class="col-md-3">
@@ -351,18 +334,6 @@ th.sort {
               :value="role"
             >
               {{ role === 'All' ? 'All Roles' : role }}
-            </option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Status</label>
-          <select class="form-select" v-model="activeFilter" @change="applyFilters">
-            <option
-              v-for="status in statusOptions"
-              :key="status"
-              :value="status"
-            >
-              {{ status === 'All' ? 'All Status' : status }}
             </option>
           </select>
         </div>
@@ -395,7 +366,7 @@ th.sort {
           v-slot="{ ds }"
           :ds-data="users"
           :ds-sortby="sortBy"
-          :ds-search-in="['name', 'email', 'role', 'active']"
+          :ds-search-in="['name', 'email', 'role']"
           :ds-page-size="pageSize"
         >
         <div class="row" :data-page-count="ds.dsPagecount">
@@ -446,11 +417,6 @@ th.sort {
                       <td>{{ row.email }}</td>
                       <td>
                         <span class="badge bg-primary">{{ row.role }}</span>
-                      </td>
-                      <td>
-                        <span :class="['badge', row.active ? 'bg-success' : 'bg-danger']">
-                          {{ row.active ? 'Active' : 'Inactive' }}
-                        </span>
                       </td>
                       <td>{{ formatDate(row.updated_at) }}</td>
                       <td class="text-center">
@@ -519,7 +485,7 @@ th.sort {
           ></button>
         </div>
         <div class="modal-body">
-          <form @submit.prevent="createUser({name: '', email: '', password: '', role: 'STAFF', active: true})">
+          <form @submit.prevent="createUser({name: '', email: '', password: '', role: 'STAFF'})">
             <div class="mb-3">
               <label for="new-name" class="form-label">Name</label>
               <input

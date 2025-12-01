@@ -10,6 +10,21 @@ const sectionSubjectSchedulesService = {
   },
 
   /**
+   * Get section subject schedules with filters
+   */
+  async getFiltered(filters = {}) {
+    const params = new URLSearchParams();
+
+    if (filters.section) params.append('section', filters.section);
+    if (filters.subject) params.append('subject', filters.subject);
+    if (filters.day_of_week) params.append('day_of_week', filters.day_of_week);
+    if (filters.room) params.append('room', filters.room);
+
+    const response = await api.get(`/api/section-subject-schedules?${params.toString()}`);
+    return response.data;
+  },
+
+  /**
    * Get section subject schedule by ID
    */
   async getById(id) {

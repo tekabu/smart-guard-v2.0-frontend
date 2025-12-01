@@ -27,7 +27,6 @@ const error = ref(null);
 const pageSize = ref(10);
 
 // Filter state
-const activeFilter = ref("All");
 const facultyFilter = ref("All");
 const dayFilter = ref("All");
 const roomFilter = ref("All");
@@ -40,7 +39,6 @@ const availableDays = ref([]);
 const DAY_ORDER = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
 
 // Computed filter options with natural sorting
-const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
 const dayOptions = computed(() => {
   if (!availableDays.value || !availableDays.value.length) return ['All'];
   const sortedDays = sortDays(availableDays.value);
@@ -77,11 +75,6 @@ const cols = reactive([
   {
     name: "Subject",
     field: "subject.subject",
-    sort: "",
-  },
-  {
-    name: "Status",
-    field: "active",
     sort: "",
   },
   {
@@ -180,15 +173,15 @@ const fetchAllData = async () => {
     availableDays.value = sortDays(allDays);
     
     // Sort faculty by name naturally
-    const facultyData = facultyRes.data.filter(f => f.active);
+    const facultyData = facultyRes.data;
     facultyList.value = facultyData.sort((a, b) => naturalCompare(a.name, b.name));
     
     // Sort rooms by room_number naturally  
-    const roomData = roomsRes.data.filter(r => r.active);
+    const roomData = roomsRes.data;
     roomList.value = roomData.sort((a, b) => naturalCompare(a.room_number, b.room_number));
     
     // Sort subjects by subject name naturally
-    const subjectData = subjectsRes.data.filter(s => s.active);
+    const subjectData = subjectsRes.data;
     subjectList.value = subjectData.sort((a, b) => naturalCompare(a.subject, b.subject));
   } catch (err) {
     console.error('Error fetching data:', err);
@@ -214,14 +207,7 @@ const applyFilters = async () => {
     
     // Sort days in proper order and assign
     availableDays.value = sortDays(allDays);
-    
-    // Apply active filter
-    if (activeFilter.value !== "All") {
-      filteredData = filteredData.filter(schedule => 
-        schedule.active === (activeFilter.value === 'Active')
-      );
-    }
-    
+
     // Apply faculty filter
     if (facultyFilter.value !== "All") {
       filteredData = filteredData.filter(schedule => schedule.user_id === facultyFilter.value);
@@ -252,15 +238,15 @@ const applyFilters = async () => {
     ]);
     
     // Sort faculty by name naturally
-    const facultyData = facultyRes.data.filter(f => f.active);
+    const facultyData = facultyRes.data;
     facultyList.value = facultyData.sort((a, b) => naturalCompare(a.name, b.name));
     
     // Sort rooms by room_number naturally  
-    const roomData = roomsRes.data.filter(r => r.active);
+    const roomData = roomsRes.data;
     roomList.value = roomData.sort((a, b) => naturalCompare(a.room_number, b.room_number));
     
     // Sort subjects by subject name naturally
-    const subjectData = subjectsRes.data.filter(s => s.active);
+    const subjectData = subjectsRes.data;
     subjectList.value = subjectData.sort((a, b) => naturalCompare(a.subject, b.subject));
   } catch (err) {
     console.error('Error applying filters:', err);
@@ -272,7 +258,6 @@ const applyFilters = async () => {
 
 // Reset filters
 const resetFilters = () => {
-  activeFilter.value = "All";
   facultyFilter.value = "All";
   dayFilter.value = "All";
   roomFilter.value = "All";
@@ -450,18 +435,6 @@ function formatDate(dateString) {
       </div>
       <div class="row mt-3">
         <div class="col-md-3">
-          <label class="form-label">Status</label>
-          <select class="form-select" v-model="activeFilter" @change="applyFilters">
-            <option
-              v-for="status in statusOptions"
-              :key="status"
-              :value="status"
-            >
-              {{ status === 'All' ? 'All Status' : status }}
-            </option>
-          </select>
-        </div>
-        <div class="col-md-3">
           <label class="form-label">&nbsp;</label>
           <button class="btn btn-secondary w-100" @click="resetFilters()">
             <i class="fa fa-undo me-1"></i> Reset
@@ -491,7 +464,7 @@ function formatDate(dateString) {
           :ds-page-size="pageSize"
 :ds-data="schedules"
           :ds-sortby="sortBy"
-          :ds-search-in="['user.name', 'day_of_week', 'room.room_number', 'subject.subject', 'active']"
+          :ds-search-in="['user.name', 'day_of_week', 'room.room_number', 'subject.subject']"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
@@ -539,11 +512,6 @@ function formatDate(dateString) {
                         <td>{{ row.day_of_week }}</td>
                         <td>{{ getRoomNumber(row.room) }}</td>
                         <td>{{ getSubjectName(row.subject) }}</td>
-                        <td>
-                          <span :class="['badge', row.active ? 'bg-success' : 'bg-danger']">
-                            {{ row.active ? 'Active' : 'Inactive' }}
-                          </span>
-                        </td>
                         <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">
                           <div class="btn-group">

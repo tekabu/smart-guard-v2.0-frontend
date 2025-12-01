@@ -22,12 +22,6 @@ const isLoading = ref(true);
 const error = ref(null);
 const pageSize = ref(10);
 
-// Filter state
-const activeFilter = ref("All");
-
-// Computed filter options with natural sorting
-const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
-
 // Helper variables
 const cols = reactive([
   {
@@ -38,11 +32,6 @@ const cols = reactive([
   {
     name: "Open Duration",
     field: "door_open_duration_seconds",
-    sort: "",
-  },
-  {
-    name: "Status",
-    field: "active",
     sort: "",
   },
   {
@@ -124,16 +113,7 @@ const applyFilters = async () => {
     error.value = null;
     
     const response = await devicesService.getAll();
-    let filteredData = response.data;
-    
-    // Apply active filter
-    if (activeFilter.value !== "All") {
-      filteredData = filteredData.filter(device => 
-        device.active === (activeFilter.value === 'Active')
-      );
-    }
-    
-    devices.value = filteredData;
+    devices.value = response.data;
   } catch (err) {
     console.error('Error applying filters:', err);
     error.value = getErrorMessage(err);
@@ -144,7 +124,6 @@ const applyFilters = async () => {
 
 // Reset filters
 const resetFilters = () => {
-  activeFilter.value = "All";
   applyFilters();
 };
 
@@ -258,29 +237,6 @@ function formatDate(dateString) {
 
   <!-- Page Content -->
   <div class="content">
-    <!-- Filters -->
-    <BaseBlock title="Filters" content-full>
-      <div class="row">
-        <div class="col-md-3">
-          <label class="form-label">Status</label>
-          <select class="form-select" v-model="activeFilter" @change="applyFilters">
-            <option
-              v-for="status in statusOptions"
-              :key="status"
-              :value="status"
-            >
-              {{ status === 'All' ? 'All Status' : status }}
-            </option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">&nbsp;</label>
-          <button class="btn btn-secondary w-100" @click="resetFilters()">
-            <i class="fa fa-undo me-1"></i> Reset
-          </button>
-        </div>
-      </div>
-    </BaseBlock>
 
     <BaseBlock title="Device List" content-full>
       <!-- Loading state -->
@@ -302,7 +258,7 @@ function formatDate(dateString) {
           v-slot="{ ds }"
           :ds-data="devices"
           :ds-sortby="sortBy"
-          :ds-search-in="['device_id', 'door_open_duration_seconds', 'active']"
+          :ds-search-in="['device_id', 'door_open_duration_seconds']"
           :ds-page-size="pageSize"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
@@ -349,11 +305,6 @@ function formatDate(dateString) {
                       <tr>
                         <td>{{ row.device_id }}</td>
                         <td>{{ row.door_open_duration_seconds }}s</td>
-                        <td>
-                          <span :class="['badge', row.active ? 'bg-success' : 'bg-danger']">
-                            {{ row.active ? 'Active' : 'Inactive' }}
-                          </span>
-                        </td>
                         <td>{{ formatDate(row.last_accessed_at) }}</td>
                         <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">
