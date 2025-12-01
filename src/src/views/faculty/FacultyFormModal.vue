@@ -217,21 +217,6 @@ function saveFacultyMember() {
                 </div>
               </div>
             </div>
-
-            <!-- Active Toggle -->
-            <div class="mb-3">
-              <div class="form-check form-switch">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="faculty-active"
-                  v-model="formData.active"
-                />
-                <label class="form-check-label" for="faculty-active">
-                  Active
-                </label>
-              </div>
-            </div>
           </form>
         </div>
         <div class="modal-footer">

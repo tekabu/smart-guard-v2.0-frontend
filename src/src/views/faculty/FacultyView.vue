@@ -25,14 +25,12 @@ const error = ref(null);
 const pageSize = ref(10);
 
 // Filter state
-const activeFilter = ref("All");
 const departmentFilter = ref("All");
 
 // Dynamic filter options
 const availableDepartments = ref([]);
 
 // Computed filter options with natural sorting
-const statusOptions = computed(() => ['All', 'Active', 'Inactive']);
 const departmentOptions = computed(() => {
   if (!availableDepartments.value || !availableDepartments.value.length) return ['All'];
   return getSortedFilterOptions(availableDepartments.value);
@@ -58,11 +56,6 @@ const cols = reactive([
   {
     name: "Department",
     field: "department",
-    sort: "",
-  },
-  {
-    name: "Status",
-    field: "active",
     sort: "",
   },
   {
@@ -112,7 +105,6 @@ function onSort(event, i) {
 
 // Reset filters
 const resetFilters = () => {
-  activeFilter.value = "All";
   departmentFilter.value = "All";
   applyFilters();
 };
@@ -139,14 +131,7 @@ const applyFilters = async () => {
     
     // Sort departments naturally
     availableDepartments.value = getSortedFilterOptions(allDepartments).filter(dept => dept !== 'All');
-    
-    // Apply active filter
-    if (activeFilter.value !== "All") {
-      filteredData = filteredData.filter(member => 
-        member.active === (activeFilter.value === 'Active')
-      );
-    }
-    
+
     // Apply department filter
     if (departmentFilter.value !== "All") {
       filteredData = filteredData.filter(member => member.department === departmentFilter.value);
@@ -295,19 +280,7 @@ function openFingerprintModal(facultyMember) {
     <!-- Filters -->
     <BaseBlock title="Filters" content-full>
       <div class="row">
-        <div class="col-md-3">
-          <label class="form-label">Status</label>
-          <select class="form-select" v-model="activeFilter" @change="applyFilters">
-            <option
-              v-for="status in statusOptions"
-              :key="status"
-              :value="status"
-            >
-              {{ status === 'All' ? 'All Status' : status }}
-            </option>
-          </select>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-6">
           <label class="form-label">Department</label>
           <select class="form-select" v-model="departmentFilter" @change="applyFilters">
             <option
@@ -319,7 +292,7 @@ function openFingerprintModal(facultyMember) {
             </option>
           </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-6">
           <label class="form-label">&nbsp;</label>
           <button class="btn btn-secondary w-100" @click="resetFilters">
             <i class="fa fa-undo me-1"></i> Reset
@@ -348,7 +321,7 @@ function openFingerprintModal(facultyMember) {
           v-slot="{ ds }"
           :ds-data="faculty"
           :ds-sortby="sortBy"
-          :ds-search-in="['name', 'email', 'faculty_id', 'department', 'active']"
+          :ds-search-in="['name', 'email', 'faculty_id', 'department']"
           :ds-page-size="pageSize"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
@@ -397,11 +370,6 @@ function openFingerprintModal(facultyMember) {
                         <td style="min-width: 150px">{{ row.name }}</td>
                         <td>{{ row.email }}</td>
                         <td>{{ row.department || '-' }}</td>
-                        <td>
-                          <span :class="['badge', row.active ? 'bg-success' : 'bg-danger']">
-                            {{ row.active ? 'Active' : 'Inactive' }}
-                          </span>
-                        </td>
                         <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">
                           <div class="btn-group">
