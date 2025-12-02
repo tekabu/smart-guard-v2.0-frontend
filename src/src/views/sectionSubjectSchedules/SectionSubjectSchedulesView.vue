@@ -15,6 +15,8 @@ import {
 import SectionSubjectScheduleFormModal from "./SectionSubjectScheduleFormModal.vue";
 import sectionSubjectSchedulesService from "@/services/sectionSubjectSchedules";
 import sectionSubjectsService from "@/services/sectionSubjects";
+import sectionsService from "@/services/sections";
+import subjectsService from "@/services/subjects";
 import roomsService from "@/services/rooms";
 
 // Schedules data from API
@@ -25,55 +27,12 @@ const pageSize = ref("10");
 
 // Available options for dropdowns (for modals)
 const availableSectionSubjects = ref([]);
+const availableSections = ref([]);
+const availableSubjects = ref([]);
 const availableRooms = ref([]);
 
-// Get unique sections from schedules
-const uniqueSections = computed(() => {
-  if (!schedules.value || !schedules.value.length) return [];
-  const sectionsMap = new Map();
-  schedules.value.forEach(s => {
-    const section = s.section_subject?.section;
-    if (section?.id && !sectionsMap.has(section.id)) {
-      sectionsMap.set(section.id, section);
-    }
-  });
-  return Array.from(sectionsMap.values()).sort((a, b) => naturalCompare(a.section, b.section));
-});
-
-// Get unique subjects from schedules
-const uniqueSubjects = computed(() => {
-  if (!schedules.value || !schedules.value.length) return [];
-  const subjectsMap = new Map();
-  schedules.value.forEach(s => {
-    const subject = s.section_subject?.subject;
-    if (subject?.id && !subjectsMap.has(subject.id)) {
-      subjectsMap.set(subject.id, subject);
-    }
-  });
-  return Array.from(subjectsMap.values()).sort((a, b) => naturalCompare(a.subject, b.subject));
-});
-
-// Get unique days from schedules
-const uniqueDays = computed(() => {
-  if (!schedules.value || !schedules.value.length) return [];
-  const days = [...new Set(schedules.value
-    .map(s => s.day_of_week)
-    .filter(d => d))];
-  return getSortedFilterOptions(days).filter(d => d !== 'All');
-});
-
-// Get unique rooms from schedules
-const uniqueRooms = computed(() => {
-  if (!schedules.value || !schedules.value.length) return [];
-  const roomsMap = new Map();
-  schedules.value.forEach(s => {
-    const room = s.room;
-    if (room?.id && !roomsMap.has(room.id)) {
-      roomsMap.set(room.id, room);
-    }
-  });
-  return Array.from(roomsMap.values()).sort((a, b) => naturalCompare(a.room, b.room));
-});
+// Static days of the week
+const daysOfWeek = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
 
 // Filters
 const filters = ref({
@@ -101,6 +60,11 @@ const cols = reactive([
   {
     name: "Subject",
     field: "section_subject.subject",
+    sort: "",
+  },
+  {
+    name: "Faculty",
+    field: "section_subject.faculty.name",
     sort: "",
   },
   {
@@ -211,10 +175,12 @@ const fetchAllData = async () => {
     isLoading.value = true;
     error.value = null;
 
-    // Fetch schedules, section subjects (full data for filters), and rooms in parallel
-    const [schedulesRes, sectionSubjectsRes, roomsRes] = await Promise.all([
+    // Fetch schedules, section subjects, sections, subjects, and rooms in parallel
+    const [schedulesRes, sectionSubjectsRes, sectionsRes, subjectsRes, roomsRes] = await Promise.all([
       sectionSubjectSchedulesService.getAll(),
       sectionSubjectsService.getAll(),
+      sectionsService.getAll(),
+      subjectsService.getAll(),
       roomsService.getAll()
     ]);
 
@@ -227,8 +193,14 @@ const fetchAllData = async () => {
       return naturalCompare(aLabel, bLabel);
     });
 
-    // Sort rooms naturally by room name
-    availableRooms.value = roomsRes.data.sort((a, b) => naturalCompare(a.room, b.room));
+    // Sort sections naturally
+    availableSections.value = sectionsRes.data.sort((a, b) => naturalCompare(a.section, b.section));
+
+    // Sort subjects naturally
+    availableSubjects.value = subjectsRes.data.sort((a, b) => naturalCompare(a.subject, b.subject));
+
+    // Sort rooms naturally by room number
+    availableRooms.value = roomsRes.data.sort((a, b) => naturalCompare(a.room_number, b.room_number));
   } catch (err) {
     console.error('Error fetching schedules:', err);
     error.value = 'Failed to load schedules. Please try again.';
@@ -405,7 +377,7 @@ function formatTime(time24) {
           <select class="form-select" v-model="filters.section_id" @change="applyFilters">
             <option value="All">All Sections</option>
             <option
-              v-for="section in uniqueSections"
+              v-for="section in availableSections"
               :key="section.id"
               :value="section.id"
             >
@@ -418,7 +390,7 @@ function formatTime(time24) {
           <select class="form-select" v-model="filters.subject_id" @change="applyFilters">
             <option value="All">All Subjects</option>
             <option
-              v-for="subject in uniqueSubjects"
+              v-for="subject in availableSubjects"
               :key="subject.id"
               :value="subject.id"
             >
@@ -431,7 +403,7 @@ function formatTime(time24) {
           <select class="form-select" v-model="filters.day_of_week" @change="applyFilters">
             <option value="All">All Days</option>
             <option
-              v-for="day in uniqueDays"
+              v-for="day in daysOfWeek"
               :key="day"
               :value="day"
             >
@@ -444,11 +416,11 @@ function formatTime(time24) {
           <select class="form-select" v-model="filters.room_id" @change="applyFilters">
             <option value="All">All Rooms</option>
             <option
-              v-for="room in uniqueRooms"
+              v-for="room in availableRooms"
               :key="room.id"
               :value="room.id"
             >
-              {{ room.room }}
+              {{ room.room_number }}
             </option>
           </select>
         </div>
@@ -519,6 +491,10 @@ function formatTime(time24) {
                       <tr>
                         <td>{{ row.section_subject?.section?.section || '-'  }}</td>
                         <td>{{ row.section_subject?.subject?.subject || '-' }}</td>
+                        <td>
+                          <div>{{ row.section_subject?.faculty?.name || '-' }}</div>
+                          <small class="text-muted">{{ row.section_subject?.faculty?.faculty_id || '' }}</small>
+                        </td>
                         <td>
                           <span class="badge bg-primary">{{ row.day_of_week }}</span>
                         </td>
@@ -600,7 +576,7 @@ function formatTime(time24) {
           <p class="text-muted mb-0">
             Section Subject: <strong>{{ scheduleToDelete?.section_subject?.label }}</strong><br>
             Day: <strong>{{ scheduleToDelete?.day_of_week }}</strong><br>
-            Room: <strong>{{ scheduleToDelete?.room?.room }}</strong><br>
+            Room: <strong>{{ scheduleToDelete?.room?.room_number }}</strong><br>
             Time: <strong>{{ formatTime(scheduleToDelete?.start_time) }} - {{ formatTime(scheduleToDelete?.end_time) }}</strong>
           </p>
         </div>

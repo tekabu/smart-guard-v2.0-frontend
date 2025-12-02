@@ -16,6 +16,8 @@ import SectionSubjectStudentFormModal from "./SectionSubjectStudentFormModal.vue
 import BulkAddStudentsModal from "./BulkAddStudentsModal.vue";
 import sectionSubjectStudentsService from "@/services/sectionSubjectStudents";
 import sectionSubjectsService from "@/services/sectionSubjects";
+import sectionsService from "@/services/sections";
+import subjectsService from "@/services/subjects";
 import usersService from "@/services/users";
 
 // Section subject students data from API
@@ -27,42 +29,9 @@ const pageSize = ref("10");
 // Available options for dropdowns
 const availableSectionSubjects = ref([]);
 const availableStudents = ref([]);
-
-// Get unique sections from availableSectionSubjects
-const uniqueSections = computed(() => {
-  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return [];
-  const sectionsMap = new Map();
-  availableSectionSubjects.value.forEach(ss => {
-    if (ss.section?.id && !sectionsMap.has(ss.section.id)) {
-      sectionsMap.set(ss.section.id, ss.section);
-    }
-  });
-  return Array.from(sectionsMap.values()).sort((a, b) => naturalCompare(a.section, b.section));
-});
-
-// Get unique subjects from availableSectionSubjects
-const uniqueSubjects = computed(() => {
-  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return [];
-  const subjectsMap = new Map();
-  availableSectionSubjects.value.forEach(ss => {
-    if (ss.subject?.id && !subjectsMap.has(ss.subject.id)) {
-      subjectsMap.set(ss.subject.id, ss.subject);
-    }
-  });
-  return Array.from(subjectsMap.values()).sort((a, b) => naturalCompare(a.subject, b.subject));
-});
-
-// Get unique faculty from availableSectionSubjects
-const uniqueFaculty = computed(() => {
-  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return [];
-  const facultyMap = new Map();
-  availableSectionSubjects.value.forEach(ss => {
-    if (ss.faculty?.id && !facultyMap.has(ss.faculty.id)) {
-      facultyMap.set(ss.faculty.id, ss.faculty);
-    }
-  });
-  return Array.from(facultyMap.values()).sort((a, b) => naturalCompare(a.name, b.name));
-});
+const availableSections = ref([]);
+const availableSubjects = ref([]);
+const availableFaculty = ref([]);
 
 // Filters
 const filters = ref({
@@ -189,10 +158,13 @@ const fetchAllData = async () => {
     isLoading.value = true;
     error.value = null;
 
-    // Fetch section subject students, section subjects (full data for filters), and students in parallel
-    const [sectionSubjectStudentsRes, sectionSubjectsRes, studentsRes] = await Promise.all([
+    // Fetch section subject students, section subjects, sections, subjects, faculty, and students in parallel
+    const [sectionSubjectStudentsRes, sectionSubjectsRes, sectionsRes, subjectsRes, facultyRes, studentsRes] = await Promise.all([
       sectionSubjectStudentsService.getAll(),
       sectionSubjectsService.getAll(),
+      sectionsService.getAll(),
+      subjectsService.getAll(),
+      usersService.getByRole('FACULTY'),
       usersService.getByRole('STUDENT')
     ]);
 
@@ -204,6 +176,15 @@ const fetchAllData = async () => {
       const bLabel = `${b.section?.section || ''} - ${b.subject?.subject || ''}`;
       return naturalCompare(aLabel, bLabel);
     });
+
+    // Sort sections naturally
+    availableSections.value = sectionsRes.data.sort((a, b) => naturalCompare(a.section, b.section));
+
+    // Sort subjects naturally
+    availableSubjects.value = subjectsRes.data.sort((a, b) => naturalCompare(a.subject, b.subject));
+
+    // Sort faculty naturally by name
+    availableFaculty.value = facultyRes.data.sort((a, b) => naturalCompare(a.name, b.name));
 
     // Sort students naturally by name
     availableStudents.value = studentsRes.data.sort((a, b) => naturalCompare(a.name, b.name));
@@ -391,7 +372,7 @@ function formatDate(dateString) {
           <select class="form-select" v-model="filters.section_id" @change="applyFilters">
             <option value="All">All Sections</option>
             <option
-              v-for="section in uniqueSections"
+              v-for="section in availableSections"
               :key="section.id"
               :value="section.id"
             >
@@ -404,7 +385,7 @@ function formatDate(dateString) {
           <select class="form-select" v-model="filters.subject_id" @change="applyFilters">
             <option value="All">All Subjects</option>
             <option
-              v-for="subject in uniqueSubjects"
+              v-for="subject in availableSubjects"
               :key="subject.id"
               :value="subject.id"
             >
@@ -417,7 +398,7 @@ function formatDate(dateString) {
           <select class="form-select" v-model="filters.faculty_id" @change="applyFilters">
             <option value="All">All Faculty</option>
             <option
-              v-for="faculty in uniqueFaculty"
+              v-for="faculty in availableFaculty"
               :key="faculty.id"
               :value="faculty.id"
             >
