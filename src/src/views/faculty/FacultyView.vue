@@ -59,6 +59,11 @@ const cols = reactive([
     sort: "",
   },
   {
+    name: "Clearance",
+    field: "clearance",
+    sort: "",
+  },
+  {
     name: "Last Updated",
     field: "updated_at",
     sort: "",
@@ -392,6 +397,20 @@ function openFingerprintModal(facultyMember) {
                         <td style="min-width: 150px">{{ row.name }}</td>
                         <td>{{ row.email }}</td>
                         <td>{{ row.department || '-' }}</td>
+                        <td>
+                          <span
+                            v-if="row.clearance === 1 || row.clearance === true"
+                            class="badge bg-success"
+                          >
+                            YES
+                          </span>
+                          <span
+                            v-else
+                            class="badge bg-danger"
+                          >
+                            NO
+                          </span>
+                        </td>
                         <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">
                           <div class="btn-group">

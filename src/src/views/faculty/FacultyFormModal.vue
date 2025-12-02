@@ -26,6 +26,7 @@ const formData = ref({
   active: true,
   faculty_id: "",
   department: "",
+  clearance: false,
 });
 
 // Form validation
@@ -45,6 +46,7 @@ watch(
         active: newFaculty.active !== undefined ? newFaculty.active : true,
         faculty_id: newFaculty.faculty_id || "",
         department: newFaculty.department || "",
+        clearance: newFaculty.clearance === 1 || newFaculty.clearance === true,
       };
     } else {
       // Creating new faculty - reset form
@@ -74,6 +76,7 @@ function resetForm() {
     active: true,
     faculty_id: "",
     department: "",
+    clearance: false,
   };
   formErrors.value = {};
 }
@@ -117,11 +120,14 @@ function saveFacultyMember() {
   // Prepare data for submission
   const dataToSave = { ...formData.value };
 
+  // Convert clearance boolean to 0 or 1
+  dataToSave.clearance = dataToSave.clearance ? 1 : 0;
+
   // Remove id if it's null (for creating new faculty)
   if (!dataToSave.id) {
     delete dataToSave.id;
   }
-  
+
   // Emit save event with form data
   emit("save", dataToSave);
   // Don't close modal here - let parent component handle it after API request
@@ -213,6 +219,22 @@ function saveFacultyMember() {
                   />
                   <div v-if="formErrors.faculty_id" class="invalid-feedback">
                     {{ formErrors.faculty_id }}
+                  </div>
+                </div>
+
+                <!-- Clearance -->
+                <div class="mb-3">
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="faculty-clearance"
+                      v-model="formData.clearance"
+                    />
+                    <label class="form-check-label" for="faculty-clearance">
+                      Clearance
+                    </label>
                   </div>
                 </div>
               </div>
