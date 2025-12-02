@@ -140,10 +140,10 @@ const newUser = ref({
 async function createUser(userData) {
   try {
     const response = await usersService.create(userData);
-    
-    // Add new user to local list
-    users.value.push(response.data);
-    
+
+    // Add new user to the beginning of the local list
+    users.value.unshift(response.data);
+
     showCreateModal.value = false;
     
     // Reset form
