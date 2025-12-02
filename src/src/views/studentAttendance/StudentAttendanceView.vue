@@ -225,11 +225,151 @@ function formatTime(time24) {
   hour = hour % 12 || 12;
   return `${hour}:${minutes} ${ampm}`;
 }
+
+// Print PDF function
+function printPDF() {
+  // Create a new window for printing
+  const printWindow = window.open('', '_blank');
+
+  // Generate the HTML content for the print window
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Student Attendance Report</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+        }
+        h1 {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        .filters-info {
+          margin-bottom: 20px;
+          padding: 10px;
+          background-color: #f5f5f5;
+          border-radius: 5px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 20px;
+        }
+        th, td {
+          border: 1px solid #000;
+          padding: 8px;
+          text-align: left;
+        }
+        th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+        }
+        .footer {
+          text-align: center;
+          margin-top: 20px;
+          font-size: 12px;
+          color: #666;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Student Attendance Report</h1>
+      ${generateFiltersInfo()}
+      <table>
+        <thead>
+          <tr>
+            <th>Section</th>
+            <th>Subject</th>
+            <th>Faculty</th>
+            <th>Student</th>
+            <th>Student ID</th>
+            <th>Date</th>
+            <th>Time In</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${generateTableRows()}
+        </tbody>
+      </table>
+      <div class="footer">
+        Generated on ${new Date().toLocaleString()}
+      </div>
+    </body>
+    </html>
+  `;
+
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+
+  // Wait for content to load, then print
+  printWindow.onload = function() {
+    printWindow.print();
+    printWindow.onafterprint = function() {
+      printWindow.close();
+    };
+  };
+}
+
+// Generate filters info for print
+function generateFiltersInfo() {
+  const filterInfo = [];
+
+  if (filters.value.section_id) {
+    const section = availableSections.value.find(s => s.id === filters.value.section_id);
+    if (section) filterInfo.push(`Section: ${section.section}`);
+  }
+
+  if (filters.value.subject_id) {
+    const subject = availableSubjects.value.find(s => s.id === filters.value.subject_id);
+    if (subject) filterInfo.push(`Subject: ${subject.subject}`);
+  }
+
+  if (filters.value.faculty_id) {
+    const faculty = availableFaculty.value.find(f => f.id === filters.value.faculty_id);
+    if (faculty) filterInfo.push(`Faculty: ${faculty.name}`);
+  }
+
+  if (filters.value.date_in) {
+    filterInfo.push(`Date: ${formatDate(filters.value.date_in)}`);
+  }
+
+  if (filterInfo.length === 0) {
+    return '<div class="filters-info"><strong>Filters:</strong> All Records</div>';
+  }
+
+  return `<div class="filters-info"><strong>Filters:</strong> ${filterInfo.join(' | ')}</div>`;
+}
+
+// Generate table rows for print
+function generateTableRows() {
+  return attendanceRecords.value.map(row => `
+    <tr>
+      <td>${row.section || '-'}</td>
+      <td>${row.subject || '-'}</td>
+      <td>${row.faculty || '-'}${row.faculty_id ? '<br><small>' + row.faculty_id + '</small>' : ''}</td>
+      <td>${row.student || '-'}${row.student_id ? '<br><small>' + row.student_id + '</small>' : ''}</td>
+      <td>${row.student_id || '-'}</td>
+      <td>${formatDate(row.date_in)}</td>
+      <td>${formatTime(row.time_in)}</td>
+    </tr>
+  `).join('');
+}
 </script>
 
 <template>
   <!-- Hero -->
   <BasePageHeading title="Student Attendance" subtitle="View student attendance records.">
+    <template #extra>
+      <button
+        class="btn btn-primary"
+        @click="printPDF"
+        :disabled="attendanceRecords.length === 0"
+      >
+        <i class="fa fa-print me-1"></i> Print PDF
+      </button>
+    </template>
   </BasePageHeading>
   <!-- END Hero -->
 
