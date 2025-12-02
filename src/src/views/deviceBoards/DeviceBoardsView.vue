@@ -34,11 +34,6 @@ const boardTypeOptions = computed(() => {
   if (!availableBoardTypes.value || !availableBoardTypes.value.length) return ['All'];
   return getSortedFilterOptions(availableBoardTypes.value);
 });
-const deviceOptions = computed(() => {
-  if (!availableDevices.value || !availableDevices.value.length) return ['All'];
-  const deviceIds = availableDevices.value.map(d => d.device_id);
-  return getSortedFilterOptions(deviceIds);
-});
 
 // Filters
 const filters = ref({
@@ -146,16 +141,15 @@ const applyFilters = async () => {
   try {
     isLoading.value = true;
     error.value = null;
-    
+
     const filterData = {};
+    // filters.device_id already contains the database ID (number)
     if (filters.value.device_id !== "All") {
-      // Convert device_id (which might be the actual ID back to device_id string)
-      const device = availableDevices.value.find(d => d.id === filters.value.device_id);
-      if (device) {
-        filterData.device_id = device.device_id;
-      }
+      filterData.device_id = filters.value.device_id;
     }
-    if (filters.value.board_type !== "All") filterData.board_type = filters.value.board_type;
+    if (filters.value.board_type !== "All") {
+      filterData.board_type = filters.value.board_type;
+    }
 
     if (Object.keys(filterData).length > 0) {
       const response = await deviceBoardsService.getFiltered(filterData);
@@ -299,12 +293,13 @@ function formatDate(dateString) {
         <div class="col-md-4">
           <label class="form-label">Device</label>
           <select class="form-select" v-model="filters.device_id" @change="applyFilters">
+            <option value="All">All Devices</option>
             <option
-              v-for="(deviceId, index) in deviceOptions"
-              :key="deviceId"
-              :value="deviceId === 'All' ? 'All' : (availableDevices.value && availableDevices.value.find(d => d.device_id === deviceId)?.id)"
+              v-for="device in availableDevices"
+              :key="device.id"
+              :value="device.id"
             >
-              {{ deviceId === 'All' ? 'All Devices' : deviceId }}
+              {{ device.device_id }}
             </option>
           </select>
         </div>

@@ -26,7 +26,7 @@ const boardTypes = [
   "FINGERPRINT",
   "RFID", 
   "LOCK",
-  "CAMERA",
+  // "CAMERA",
   "DISPLAY"
 ];
 
