@@ -22,7 +22,7 @@ import facultyService from "@/services/faculty";
 const faculty = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
-const pageSize = ref(10);
+const pageSize = ref("10");
 
 // Filter state
 const departmentFilter = ref("All");
@@ -322,24 +322,15 @@ function openFingerprintModal(facultyMember) {
           :ds-data="faculty"
           :ds-sortby="sortBy"
           :ds-search-in="['name', 'email', 'faculty_id', 'department']"
-          :ds-page-size="pageSize"
+          :ds-page-size="Number(pageSize)"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
-              <div class="d-flex align-items-center gap-2">
-                <label class="form-label mb-0">Show</label>
-                <select
-                  class="form-select"
-                  style="width: auto; min-width: 65px; max-width: 80px;"
-                  v-model.number="pageSize"
-                >
-                  <option :value="10">10</option>
-                  <option :value="25">25</option>
-                  <option :value="50">50</option>
-                  <option :value="100">100</option>
-                </select>
-                <label class="form-label mb-0">entries</label>
-              </div>
+              <DatasetShow
+                v-model="pageSize"
+                ds-show-label="Show {entries}"
+                style="display: flex; align-items: center; gap: 0.5rem; max-width: 200px;"
+              />
             </div>
             <div class="col-md-6 py-2">
               <DatasetSearch ds-search-placeholder="Search..." />
