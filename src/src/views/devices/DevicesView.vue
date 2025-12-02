@@ -88,6 +88,37 @@ function onSort(event, i) {
 onMounted(() => {
   // Fetch devices on component mount
   applyFilters();
+
+  // Remove "entries" text and resize select from DatasetShow component
+  // Use multiple attempts to ensure it works even after slow page loads
+  const hideEntriesText = () => {
+    const formInlineElements = document.querySelectorAll('.form-inline');
+    formInlineElements.forEach(element => {
+      const labels = element.querySelectorAll('label');
+      labels.forEach((label, index) => {
+        if (label.textContent.includes('entries')) {
+          label.style.display = 'none';
+        }
+        // Also hide the last label if it's not the first one
+        if (index > 0 && index === labels.length - 1) {
+          label.style.display = 'none';
+        }
+      });
+
+      // Make select smaller
+      const selectElement = element.querySelector('select');
+      if (selectElement) {
+        selectElement.style.width = '60px';
+        selectElement.style.minWidth = '60px';
+        selectElement.style.maxWidth = '60px';
+      }
+    });
+  };
+
+  // Try multiple times with different delays to ensure it works
+  setTimeout(hideEntriesText, 100);
+  setTimeout(hideEntriesText, 300);
+  setTimeout(hideEntriesText, 500);
 });
 
 // Fetch devices from API
@@ -461,9 +492,6 @@ th.sort {
   z-index: 1050;
 }
 
-/* Hide the "entries" text from custom select */
-.d-flex align-items-center label:last-child {
-  display: none;
 /* Hide the "entries" text from DatasetShow */
 .form-inline label:nth-child(3) {
   display: none;
@@ -512,6 +540,5 @@ th.sort {
 
 .form-inline label:last-of-type {
   display: none;
-}
 }
 </style>

@@ -113,9 +113,10 @@ const resetFilters = () => {
 onMounted(() => {
   // Fetch faculty on component mount
   applyFilters();
-  
+
   // Remove "entries" text and resize select from DatasetShow component
-  setTimeout(() => {
+  // Use multiple attempts to ensure it works even after slow page loads
+  const hideEntriesText = () => {
     const formInlineElements = document.querySelectorAll('.form-inline');
     formInlineElements.forEach(element => {
       const labels = element.querySelectorAll('label');
@@ -128,7 +129,7 @@ onMounted(() => {
           label.style.display = 'none';
         }
       });
-      
+
       // Make select smaller
       const selectElement = element.querySelector('select');
       if (selectElement) {
@@ -137,7 +138,12 @@ onMounted(() => {
         selectElement.style.maxWidth = '60px';
       }
     });
-  }, 100);
+  };
+
+  // Try multiple times with different delays to ensure it works
+  setTimeout(hideEntriesText, 100);
+  setTimeout(hideEntriesText, 300);
+  setTimeout(hideEntriesText, 500);
 });
 
 // Apply filters

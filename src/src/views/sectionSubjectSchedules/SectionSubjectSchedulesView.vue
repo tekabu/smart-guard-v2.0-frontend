@@ -21,7 +21,7 @@ import roomsService from "@/services/rooms";
 const schedules = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
-const pageSize = ref(10);
+const pageSize = ref("10");
 
 // Available options for dropdowns (for modals)
 const availableSectionSubjects = ref([]);
@@ -172,6 +172,37 @@ function onSort(event, i) {
 onMounted(() => {
   // Fetch data on component mount
   fetchAllData();
+
+  // Remove "entries" text and resize select from DatasetShow component
+  // Use multiple attempts to ensure it works even after slow page loads
+  const hideEntriesText = () => {
+    const formInlineElements = document.querySelectorAll('.form-inline');
+    formInlineElements.forEach(element => {
+      const labels = element.querySelectorAll('label');
+      labels.forEach((label, index) => {
+        if (label.textContent.includes('entries')) {
+          label.style.display = 'none';
+        }
+        // Also hide the last label if it's not the first one
+        if (index > 0 && index === labels.length - 1) {
+          label.style.display = 'none';
+        }
+      });
+
+      // Make select smaller
+      const selectElement = element.querySelector('select');
+      if (selectElement) {
+        selectElement.style.width = '60px';
+        selectElement.style.minWidth = '60px';
+        selectElement.style.maxWidth = '60px';
+      }
+    });
+  };
+
+  // Try multiple times with different delays to ensure it works
+  setTimeout(hideEntriesText, 100);
+  setTimeout(hideEntriesText, 300);
+  setTimeout(hideEntriesText, 500);
 });
 
 // Fetch all required data
@@ -448,27 +479,18 @@ function formatTime(time24) {
       <template v-else>
         <Dataset
           v-slot="{ ds }"
-          :ds-page-size="pageSize"
           :ds-data="schedules"
           :ds-sortby="sortBy"
           :ds-search-in="['section_subject.label', 'day_of_week', 'room.room']"
+          :ds-page-size="Number(pageSize)"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
-              <div class="d-flex align-items-center gap-2">
-                <label class="form-label mb-0">Show</label>
-                <select
-                  class="form-select"
-                  style="width: auto; min-width: 65px; max-width: 80px;"
-                  v-model.number="pageSize"
-                >
-                  <option :value="10">10</option>
-                  <option :value="25">25</option>
-                  <option :value="50">50</option>
-                  <option :value="100">100</option>
-                </select>
-                <label class="form-label mb-0">entries</label>
-              </div>
+              <DatasetShow
+                v-model="pageSize"
+                ds-show-label="Show"
+                style="display: flex; align-items: center; gap: 0.5rem; max-width: 200px;"
+              />
             </div>
             <div class="col-md-6 py-2">
               <DatasetSearch ds-search-placeholder="Search..." />
@@ -671,5 +693,44 @@ th.sort {
 
 .modal {
   z-index: 1050;
+}
+
+/* Hide the "entries" text from DatasetShow */
+.form-inline label:nth-child(3) {
+  display: none;
+}
+
+/* Alternative approach - hide all labels after the select */
+.form-inline select + label {
+  display: none;
+}
+
+/* More aggressive approach - hide labels containing "entries" */
+.form-inline label:contains("entries") {
+  display: none;
+}
+
+/* Hide any label that comes after the select in form-inline */
+.form-inline label:not(:first-child) {
+  display: none;
+}
+
+/* Make the select smaller in DatasetShow - more specific selectors */
+.form-inline select.form-control {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+}
+
+.form-inline .form-control.mr-1 {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+}
+
+.form-inline .form-control.ml-1 {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
 }
 </style>
