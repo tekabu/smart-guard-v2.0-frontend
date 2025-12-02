@@ -76,6 +76,11 @@ export default {
       icon: "si si-calendar",
       to: "classSessions",
     },
+    {
+      name: "Student Attendance",
+      icon: "si si-check",
+      to: "studentAttendance",
+    },
   ],
   boxed: [
     {

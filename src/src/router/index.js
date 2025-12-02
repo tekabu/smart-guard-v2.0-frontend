@@ -22,6 +22,7 @@ const SectionSubjects = () => import("@/views/sectionSubjects/SectionSubjectsVie
 const SectionSubjectStudents = () => import("@/views/sectionSubjectStudents/SectionSubjectStudentsView.vue");
 const SectionSubjectSchedules = () => import("@/views/sectionSubjectSchedules/SectionSubjectSchedulesView.vue");
 const ClassSessions = () => import("@/views/classSessions/ClassSessionsView.vue");
+const StudentAttendance = () => import("@/views/studentAttendance/StudentAttendanceView.vue");
 
 // Auth
 const AuthSignIn = () => import("@/views/auth/SignInView.vue");
@@ -190,6 +191,17 @@ const routes = [
         path: "",
         name: "classSessions",
         component: ClassSessions,
+      },
+    ],
+  },
+  {
+    path: "/student-attendance",
+    component: LayoutBackend,
+    children: [
+      {
+        path: "",
+        name: "studentAttendance",
+        component: StudentAttendance,
       },
     ],
   },
