@@ -18,6 +18,7 @@ import sectionSubjectsService from "@/services/sectionSubjects";
 import sectionsService from "@/services/sections";
 import subjectsService from "@/services/subjects";
 import roomsService from "@/services/rooms";
+import scheduleSessionsService from "@/services/scheduleSessions";
 
 // Schedules data from API
 const schedules = ref([]);
@@ -261,8 +262,10 @@ const resetFilters = () => {
 // Modal state
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
+const showStartSessionModal = ref(false);
 const selectedSchedule = ref(null);
 const scheduleToDelete = ref(null);
+const scheduleToStartSession = ref(null);
 const isEditMode = ref(false);
 
 // Edit schedule
@@ -345,6 +348,35 @@ async function deleteSchedule() {
 function cancelDelete() {
   showDeleteModal.value = false;
   scheduleToDelete.value = null;
+}
+
+// Show start session confirmation
+function confirmStartSession(schedule) {
+  scheduleToStartSession.value = schedule;
+  showStartSessionModal.value = true;
+}
+
+// Start class session
+async function startClassSession() {
+  try {
+    const response = await scheduleSessionsService.create({
+      section_subject_schedule_id: scheduleToStartSession.value.id
+    });
+
+    showStartSessionModal.value = false;
+    scheduleToStartSession.value = null;
+
+    showSuccessToast('Class session started successfully');
+  } catch (err) {
+    console.error('Error starting class session:', err);
+    showErrorToast(err);
+  }
+}
+
+// Cancel start session
+function cancelStartSession() {
+  showStartSessionModal.value = false;
+  scheduleToStartSession.value = null;
 }
 
 // Format date
@@ -517,6 +549,14 @@ function formatTime(time24) {
                           <div class="btn-group">
                             <button
                               type="button"
+                              class="btn btn-sm btn-success"
+                              @click="confirmStartSession(row)"
+                              title="Start Class Session"
+                            >
+                              <i class="fa fa-fw fa-play"></i>
+                            </button>
+                            <button
+                              type="button"
                               class="btn btn-sm btn-alt-secondary"
                               @click="editSchedule(row)"
                               title="Edit Schedule"
@@ -610,6 +650,58 @@ function formatTime(time24) {
     v-if="showDeleteModal"
     class="modal-backdrop fade"
     :class="{ show: showDeleteModal }"
+  ></div>
+
+  <!-- Start Session Confirmation Modal -->
+  <div
+    class="modal"
+    :class="{ show: showStartSessionModal, 'd-block': showStartSessionModal }"
+    tabindex="-1"
+    role="dialog"
+  >
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Start Class Session</h5>
+          <button
+            type="button"
+            class="btn-close"
+            @click="cancelStartSession"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <p v-if="scheduleToStartSession">
+            Are you sure you want to start a class session for this schedule?
+          </p>
+          <p class="text-muted mb-0">
+            Section: <strong>{{ scheduleToStartSession?.section_subject?.section?.section }}</strong><br>
+            Subject: <strong>{{ scheduleToStartSession?.section_subject?.subject?.subject }}</strong><br>
+            Faculty: <strong>{{ scheduleToStartSession?.section_subject?.faculty?.name }}</strong><br>
+            Day: <strong>{{ scheduleToStartSession?.day_of_week }}</strong><br>
+            Room: <strong>{{ scheduleToStartSession?.room?.room_number }}</strong><br>
+            Time: <strong>{{ formatTime(scheduleToStartSession?.start_time) }} - {{ formatTime(scheduleToStartSession?.end_time) }}</strong>
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="cancelStartSession"
+          >
+            Cancel
+          </button>
+          <button type="button" class="btn btn-success" @click="startClassSession">
+            <i class="fa fa-play me-1"></i> Start Session
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    v-if="showStartSessionModal"
+    class="modal-backdrop fade"
+    :class="{ show: showStartSessionModal }"
   ></div>
 </template>
 

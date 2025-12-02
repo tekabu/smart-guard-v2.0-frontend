@@ -12,6 +12,24 @@ const scheduleSessionsService = {
 
     const response = await api.get('/api/schedule-sessions/overview', { params });
     return response.data;
+  },
+
+  // Create a new schedule session
+  async create(data) {
+    const response = await api.post('/api/schedule-sessions/create?start=1', data);
+    return response.data;
+  },
+
+  // Start a schedule session
+  async start(scheduleSessionId) {
+    const response = await api.post(`/api/schedule-sessions/${scheduleSessionId}/start`);
+    return response.data;
+  },
+
+  // Close a schedule session
+  async close(scheduleSessionId) {
+    const response = await api.post(`/api/schedule-sessions/${scheduleSessionId}/close`);
+    return response.data;
   }
 };
 

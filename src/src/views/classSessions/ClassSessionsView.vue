@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, computed, onMounted, ref } from "vue";
-import { showErrorToast } from "@/utils/errorHandler";
+import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 import { naturalCompare } from "@/utils/naturalSort";
 
 import {
@@ -221,6 +221,42 @@ const resetFilters = () => {
   applyFilters();
 };
 
+// Start session
+async function startSession(session) {
+  try {
+    const response = await scheduleSessionsService.start(session.id);
+
+    // Update the session in the local list
+    const index = sessions.value.findIndex(s => s.id === session.id);
+    if (index !== -1) {
+      sessions.value[index] = { ...sessions.value[index], ...response.data };
+    }
+
+    showSuccessToast('Session started successfully');
+  } catch (err) {
+    console.error('Error starting session:', err);
+    showErrorToast(err);
+  }
+}
+
+// Close session
+async function closeSession(session) {
+  try {
+    const response = await scheduleSessionsService.close(session.id);
+
+    // Update the session in the local list
+    const index = sessions.value.findIndex(s => s.id === session.id);
+    if (index !== -1) {
+      sessions.value[index] = { ...sessions.value[index], ...response.data };
+    }
+
+    showSuccessToast('Session closed successfully');
+  } catch (err) {
+    console.error('Error closing session:', err);
+    showErrorToast(err);
+  }
+}
+
 // Format date
 function formatDate(dateString) {
   if (!dateString) return '-';
@@ -369,6 +405,7 @@ function formatTime(time24) {
                       >
                         {{ th.name }} <i class="gg-select float-end"></i>
                       </th>
+                      <th scope="col" class="text-center">Actions</th>
                     </tr>
                   </thead>
                   <DatasetItem tag="tbody">
@@ -376,13 +413,35 @@ function formatTime(time24) {
                       <tr>
                         <td>{{ row.section || '-' }}</td>
                         <td>{{ row.subject || '-' }}</td>
-                        <td>{{ row.faculty || '-' }}</td>
+                        <td>{{ row.faculty?.name || row.faculty || '-' }}</td>
                         <td>
                           <span class="badge bg-primary">{{ row.day_of_week }}</span>
                         </td>
                         <td>{{ formatDate(row.start_date) }}</td>
                         <td>{{ formatTime(row.start_time) }}</td>
                         <td>{{ formatTime(row.end_time) }}</td>
+                        <td class="text-center">
+                          <div class="btn-group">
+                            <button
+                              v-if="!row.start_time"
+                              type="button"
+                              class="btn btn-sm btn-success"
+                              @click="startSession(row)"
+                              title="Start Session"
+                            >
+                              <i class="fa fa-fw fa-play"></i>
+                            </button>
+                            <button
+                              v-if="row.start_time && !row.end_time"
+                              type="button"
+                              class="btn btn-sm btn-danger"
+                              @click="closeSession(row)"
+                              title="Close Session"
+                            >
+                              <i class="fa fa-fw fa-stop"></i>
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     </template>
                   </DatasetItem>
