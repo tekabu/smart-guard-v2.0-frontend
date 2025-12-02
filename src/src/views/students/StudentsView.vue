@@ -36,20 +36,14 @@ const pageSize = ref(10);
 
 // Filter state
 const courseFilter = ref("All");
-const departmentFilter = ref("All");
 
 // Dynamic filter options
 const availableCourses = ref([]);
-const availableDepartments = ref([]);
 
 // Computed filter options with natural sorting
 const courseOptions = computed(() => {
   if (!availableCourses.value || !availableCourses.value.length) return ['All'];
   return getSortedFilterOptions(availableCourses.value);
-});
-const departmentOptions = computed(() => {
-  if (!availableDepartments.value || !availableDepartments.value.length) return ['All'];
-  return getSortedFilterOptions(availableDepartments.value);
 });
 
 // Helper variables
@@ -72,11 +66,6 @@ const cols = reactive([
   {
     name: "Course",
     field: "course",
-    sort: "",
-  },
-  {
-    name: "Department",
-    field: "department",
     sort: "",
   },
   {
@@ -132,7 +121,6 @@ function onSort(event, i) {
 // Reset filters
 const resetFilters = () => {
   courseFilter.value = "All";
-  departmentFilter.value = "All";
   applyFilters();
 };
 
@@ -147,32 +135,23 @@ const applyFilters = async () => {
   try {
     isLoading.value = true;
     error.value = null;
-    
+
     const response = await studentsService.getAll();
     let filteredData = response.data;
-    
-    // Extract unique courses and departments from API data
+
+    // Extract unique courses from API data
     const allCourses = [...new Set(response.data
       .map(student => student.course)
       .filter(course => course))];
-    const allDepartments = [...new Set(response.data
-      .map(student => student.department)
-      .filter(dept => dept))];
-    
-    // Sort courses and departments naturally
+
+    // Sort courses naturally
     availableCourses.value = getSortedFilterOptions(allCourses).filter(course => course !== 'All');
-    availableDepartments.value = getSortedFilterOptions(allDepartments).filter(dept => dept !== 'All');
 
     // Apply course filter
     if (courseFilter.value !== "All") {
       filteredData = filteredData.filter(student => student.course === courseFilter.value);
     }
-    
-    // Apply department filter
-    if (departmentFilter.value !== "All") {
-      filteredData = filteredData.filter(student => student.department === departmentFilter.value);
-    }
-    
+
     students.value = filteredData;
   } catch (err) {
     console.error('Error applying filters:', err);
@@ -320,7 +299,7 @@ function openFingerprintModal(student) {
     <!-- Filters -->
     <BaseBlock title="Filters" content-full>
       <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-6">
           <label class="form-label">Course</label>
           <select class="form-select" v-model="courseFilter" @change="applyFilters">
             <option
@@ -332,19 +311,7 @@ function openFingerprintModal(student) {
             </option>
           </select>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Department</label>
-          <select class="form-select" v-model="departmentFilter" @change="applyFilters">
-            <option
-              v-for="department in departmentOptions"
-              :key="department"
-              :value="department"
-            >
-              {{ department === 'All' ? 'All Departments' : department }}
-            </option>
-          </select>
-        </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
           <label class="form-label">&nbsp;</label>
           <button class="btn btn-secondary w-100" @click="resetFilters">
             <i class="fa fa-undo me-1"></i> Reset
@@ -373,7 +340,7 @@ function openFingerprintModal(student) {
           v-slot="{ ds }"
           :ds-data="students"
           :ds-sortby="sortBy"
-          :ds-search-in="['name', 'email', 'student_id', 'course', 'department']"
+          :ds-search-in="['name', 'email', 'student_id', 'course']"
           :ds-page-size="pageSize"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
@@ -422,7 +389,6 @@ function openFingerprintModal(student) {
                         <td style="min-width: 150px">{{ row.name }}</td>
                         <td>{{ row.email }}</td>
                         <td>{{ row.course || '-' }}</td>
-                        <td>{{ row.department || '-' }}</td>
                         <td>{{ row.year_level || '-' }}</td>
                         <td>{{ formatDate(row.updated_at) }}</td>
                         <td class="text-center">

@@ -28,7 +28,6 @@ const formData = ref({
   course: "",
   year_level: "",
   attendance_rate: "",
-  department: "",
 });
 
 // Form validation
@@ -50,7 +49,6 @@ watch(
         course: newStudent.course || "",
         year_level: newStudent.year_level || "",
         attendance_rate: newStudent.attendance_rate || "",
-        department: newStudent.department || "",
       };
     } else {
       // Creating new student - reset form
@@ -82,7 +80,6 @@ function resetForm() {
     course: "",
     year_level: "",
     attendance_rate: "",
-    department: "",
   };
   formErrors.value = {};
 }
@@ -233,18 +230,6 @@ function saveStudent() {
                   <div v-if="formErrors.year_level" class="invalid-feedback">
                     {{ formErrors.year_level }}
                   </div>
-                </div>
-
-                <!-- Department -->
-                <div class="mb-3">
-                  <label for="student-department" class="form-label">Department</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="student-department"
-                    autocomplete="organization"
-                    v-model="formData.department"
-                  />
                 </div>
 
                 <!-- Course -->
