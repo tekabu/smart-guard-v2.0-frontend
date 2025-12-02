@@ -61,6 +61,9 @@ watch(
   (newShow) => {
     if (newShow && props.student?.id) {
       loadRfidCards();
+    } else if (!newShow) {
+      // Close MQTT connection when modal closes
+      disconnectMqtt();
     }
   }
 );
@@ -295,12 +298,22 @@ function stopRfidScan() {
   currentReference.value = null;
 }
 
-// Cleanup MQTT connection on unmount
-onUnmounted(() => {
+// Disconnect MQTT
+function disconnectMqtt() {
   if (mqttClient.value) {
+    console.log('Disconnecting from MQTT broker');
+    isScanning.value = false;
+    currentReference.value = null;
+    isMqttConnected.value = false;
+    isMqttConnecting.value = false;
     mqttClient.value.end();
     mqttClient.value = null;
   }
+}
+
+// Cleanup MQTT connection on unmount
+onUnmounted(() => {
+  disconnectMqtt();
 });
 </script>
 
