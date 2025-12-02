@@ -69,6 +69,16 @@ const sortBy = computed(() => {
   }, []);
 });
 
+// Add searchable fields to data items for Dataset search
+const sectionSubjectsWithSearchFields = computed(() => {
+  return sectionSubjects.value.map(item => ({
+    ...item,
+    searchableSection: item.section?.section || '',
+    searchableSubject: item.subject?.subject || '',
+    searchableFaculty: item.faculty?.name || ''
+  }));
+});
+
 // On sort th click
 function onSort(event, i) {
   let toset;
@@ -369,9 +379,9 @@ function formatDate(dateString) {
         <Dataset
           v-slot="{ ds }"
           :ds-page-size="Number(pageSize)"
-          :ds-data="sectionSubjects"
+          :ds-data="sectionSubjectsWithSearchFields"
           :ds-sortby="sortBy"
-          :ds-search-in="['section.section', 'subject.subject', 'faculty.name']"
+          :ds-search-in="['searchableSection', 'searchableSubject', 'searchableFaculty']"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">

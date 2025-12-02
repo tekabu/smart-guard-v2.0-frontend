@@ -104,6 +104,17 @@ const sortBy = computed(() => {
   }, []);
 });
 
+// Add searchable fields to data items for Dataset search
+const schedulesWithSearchFields = computed(() => {
+  return schedules.value.map(item => ({
+    ...item,
+    searchableSection: item.section_subject?.section?.section || '',
+    searchableSubject: item.section_subject?.subject?.subject || '',
+    searchableFaculty: item.section_subject?.faculty?.name || '',
+    searchableRoom: item.room?.room_number || ''
+  }));
+});
+
 // On sort th click
 function onSort(event, i) {
   let toset;
@@ -451,9 +462,9 @@ function formatTime(time24) {
       <template v-else>
         <Dataset
           v-slot="{ ds }"
-          :ds-data="schedules"
+          :ds-data="schedulesWithSearchFields"
           :ds-sortby="sortBy"
-          :ds-search-in="['section_subject.label', 'day_of_week', 'room.room']"
+          :ds-search-in="['searchableSection', 'searchableSubject', 'searchableFaculty', 'day_of_week', 'searchableRoom']"
           :ds-page-size="Number(pageSize)"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
