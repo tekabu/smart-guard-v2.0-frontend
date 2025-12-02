@@ -1,7 +1,8 @@
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onUnmounted } from "vue";
 import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 import userRfidsService from "@/services/userRfids";
+import mqtt from "mqtt";
 
 const props = defineProps({
   faculty: {
@@ -32,6 +33,16 @@ const formData = ref({
 
 // Form validation
 const formErrors = ref({});
+
+// MQTT state
+const mqttClient = ref(null);
+const isScanning = ref(false);
+const isMqttConnected = ref(false);
+const isMqttConnecting = ref(false);
+const currentReference = ref(null);
+const MQTT_BROKER = "ws://broker.emqx.io:8083/mqtt";
+const TOPIC_PUBLISH = "dJfmRURS5LaJtZ1NZAHX86A9uAk4LZ-smart-guard-rfid";
+const TOPIC_SUBSCRIBE = "dJfmRURS5LaJtZ1NZAHX86A9uAk4LZ-smart-guard-rfid-response";
 
 // Watch for faculty prop changes to load RFID cards
 watch(
@@ -168,6 +179,129 @@ function formatDate(dateString) {
   if (!dateString) return '-';
   return new Date(dateString).toLocaleString();
 }
+
+// Generate UUID v4
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+// Initialize MQTT connection
+function initMqttConnection() {
+  if (mqttClient.value) {
+    return; // Already connected
+  }
+
+  try {
+    isMqttConnecting.value = true;
+    isMqttConnected.value = false;
+    mqttClient.value = mqtt.connect(MQTT_BROKER);
+
+    mqttClient.value.on('connect', () => {
+      console.log('Connected to MQTT broker');
+      mqttClient.value.subscribe(TOPIC_SUBSCRIBE, (err) => {
+        if (err) {
+          console.error('Failed to subscribe:', err);
+          showErrorToast('Failed to connect to RFID scanner');
+          isMqttConnecting.value = false;
+          isMqttConnected.value = false;
+        } else {
+          console.log('Subscribed to response topic');
+          isMqttConnecting.value = false;
+          isMqttConnected.value = true;
+          showSuccessToast('Connected to RFID scanner');
+        }
+      });
+    });
+
+    mqttClient.value.on('message', (topic, message) => {
+      if (topic === TOPIC_SUBSCRIBE) {
+        try {
+          const payload = JSON.parse(message.toString());
+          console.log('Received MQTT message:', payload);
+
+          // Check if this message is for our current request
+          if (payload.reference === currentReference.value && payload.mode === 'REGISTER') {
+            if (payload.data) {
+              formData.value.card_id = payload.data;
+              showSuccessToast('RFID card scanned successfully');
+              isScanning.value = false;
+              currentReference.value = null;
+            }
+          }
+        } catch (err) {
+          console.error('Error parsing MQTT message:', err);
+        }
+      }
+    });
+
+    mqttClient.value.on('error', (err) => {
+      console.error('MQTT error:', err);
+      showErrorToast('MQTT connection error');
+      isScanning.value = false;
+      isMqttConnecting.value = false;
+      isMqttConnected.value = false;
+    });
+
+    mqttClient.value.on('close', () => {
+      console.log('MQTT connection closed');
+      mqttClient.value = null;
+      isMqttConnected.value = false;
+      isMqttConnecting.value = false;
+    });
+  } catch (err) {
+    console.error('Failed to connect to MQTT broker:', err);
+    showErrorToast('Failed to connect to RFID scanner');
+    isMqttConnecting.value = false;
+    isMqttConnected.value = false;
+  }
+}
+
+// Start RFID scan
+function startRfidScan() {
+  if (!mqttClient.value || !mqttClient.value.connected) {
+    showErrorToast('Not connected to RFID scanner. Please try again.');
+    return;
+  }
+
+  isScanning.value = true;
+  currentReference.value = generateUUID();
+
+  const payload = {
+    reference: currentReference.value,
+    position: "FRONT",
+    mode: "REGISTER"
+  };
+
+  console.log('Publishing MQTT message:', payload);
+  mqttClient.value.publish(TOPIC_PUBLISH, JSON.stringify(payload), (err) => {
+    if (err) {
+      console.error('Failed to publish:', err);
+      showErrorToast('Failed to send scan request');
+      isScanning.value = false;
+      currentReference.value = null;
+    } else {
+      showSuccessToast('Waiting for RFID card scan...');
+    }
+  });
+}
+
+// Stop scanning
+function stopRfidScan() {
+  isScanning.value = false;
+  currentReference.value = null;
+}
+
+// Cleanup MQTT connection on unmount
+onUnmounted(() => {
+  if (mqttClient.value) {
+    mqttClient.value.end();
+    mqttClient.value = null;
+  }
+});
 </script>
 
 <template>
@@ -205,24 +339,60 @@ function formatDate(dateString) {
               <form @submit.prevent="saveCard">
                 <div class="mb-3">
                   <label for="card-id" class="form-label">Card ID <span class="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    :class="{ 'is-invalid': formErrors.card_id }"
-                    id="card-id"
-                    v-model="formData.card_id"
-                    required
-                  />
-                  <div v-if="formErrors.card_id" class="invalid-feedback">
+                  <div class="input-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      :class="{ 'is-invalid': formErrors.card_id }"
+                      id="card-id"
+                      v-model="formData.card_id"
+                      required
+                      :disabled="isScanning"
+                    />
+                    <!-- Show Connect button when not connected -->
+                    <button
+                      v-if="!isMqttConnected && !isEditMode"
+                      type="button"
+                      class="btn btn-secondary"
+                      @click="initMqttConnection"
+                      :disabled="isMqttConnecting"
+                    >
+                      <i class="fa" :class="isMqttConnecting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
+                      {{ isMqttConnecting ? 'Connecting...' : 'Connect Scanner' }}
+                    </button>
+                    <!-- Show Scan button when connected -->
+                    <button
+                      v-if="isMqttConnected && !isEditMode"
+                      type="button"
+                      class="btn btn-info"
+                      :class="{ 'btn-warning': isScanning }"
+                      @click="isScanning ? stopRfidScan() : startRfidScan()"
+                    >
+                      <i class="fa" :class="isScanning ? 'fa-stop' : 'fa-wifi'"></i>
+                      {{ isScanning ? 'Stop Scan' : 'Scan RFID' }}
+                    </button>
+                  </div>
+                  <div v-if="formErrors.card_id" class="invalid-feedback d-block">
                     {{ formErrors.card_id }}
                   </div>
+                  <small v-if="isScanning" class="text-warning d-block mt-1">
+                    <i class="fa fa-spinner fa-spin me-1"></i>
+                    Waiting for RFID card... Please scan your card now.
+                  </small>
+                  <small v-if="isMqttConnected && !isScanning && !isEditMode" class="text-success d-block mt-1">
+                    <i class="fa fa-check-circle me-1"></i>
+                    RFID scanner connected. Click "Scan RFID" to read a card.
+                  </small>
+                  <small v-if="isEditMode" class="text-muted d-block mt-1">
+                    RFID scanning is only available when adding new cards.
+                  </small>
                 </div>
                 <div class="d-flex gap-2">
-                  <button type="submit" class="btn btn-primary btn-sm">
+                  <button type="submit" class="btn btn-primary btn-sm" :disabled="isScanning">
                     <i class="fa fa-save me-1"></i>
                     {{ isEditMode ? 'Update' : 'Add' }}
                   </button>
-                  <button type="button" class="btn btn-secondary btn-sm" @click="cancelForm">
+                  <button type="button" class="btn btn-secondary btn-sm" @click="cancelForm" :disabled="isScanning">
                     <i class="fa fa-times me-1"></i>
                     Cancel
                   </button>
