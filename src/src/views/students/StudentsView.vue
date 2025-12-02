@@ -347,7 +347,6 @@ function openFingerprintModal(student) {
             <div class="col-md-6 py-2">
               <DatasetShow
                 v-model="pageSize"
-                :ds-show-entries="[10, 25, 50, 100]"
                 ds-show-label="Show {entries}"
                 style="display: flex; align-items: center; gap: 0.5rem; max-width: 200px;"
               />
