@@ -28,7 +28,6 @@ const editingCard = ref(null);
 // Form data
 const formData = ref({
   card_id: "",
-  active: true,
 });
 
 // Form validation
@@ -75,7 +74,6 @@ async function loadRfidCards() {
 function showAddForm() {
   formData.value = {
     card_id: "",
-    active: true,
   };
   formErrors.value = {};
   isEditMode.value = false;
@@ -87,7 +85,6 @@ function showAddForm() {
 function showEditForm(card) {
   formData.value = {
     card_id: card.card_id,
-    active: card.active,
   };
   formErrors.value = {};
   isEditMode.value = true;
@@ -100,7 +97,6 @@ function cancelForm() {
   showCardForm.value = false;
   formData.value = {
     card_id: "",
-    active: true,
   };
   formErrors.value = {};
   isEditMode.value = false;
@@ -126,7 +122,7 @@ async function saveCard() {
     const cardData = {
       user_id: props.faculty.id,
       card_id: formData.value.card_id,
-      active: formData.value.active,
+      active: true,
     };
 
     if (isEditMode.value) {
@@ -221,19 +217,6 @@ function formatDate(dateString) {
                     {{ formErrors.card_id }}
                   </div>
                 </div>
-                <div class="mb-3">
-                  <div class="form-check form-switch">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="card-active"
-                      v-model="formData.active"
-                    />
-                    <label class="form-check-label" for="card-active">
-                      Active
-                    </label>
-                  </div>
-                </div>
                 <div class="d-flex gap-2">
                   <button type="submit" class="btn btn-primary btn-sm">
                     <i class="fa fa-save me-1"></i>
@@ -262,7 +245,6 @@ function formatDate(dateString) {
               <thead>
                 <tr>
                   <th>Card ID</th>
-                  <th>Status</th>
                   <th>Created At</th>
                   <th>Updated At</th>
                   <th class="text-center">Actions</th>
@@ -270,17 +252,12 @@ function formatDate(dateString) {
               </thead>
               <tbody>
                 <tr v-if="rfidCards.length === 0">
-                  <td colspan="5" class="text-center text-muted">
+                  <td colspan="4" class="text-center text-muted">
                     No RFID cards registered
                   </td>
                 </tr>
                 <tr v-for="card in rfidCards" :key="card.id">
                   <td>{{ card.card_id }}</td>
-                  <td>
-                    <span :class="['badge', card.active ? 'bg-success' : 'bg-danger']">
-                      {{ card.active ? 'Active' : 'Inactive' }}
-                    </span>
-                  </td>
                   <td>{{ formatDate(card.created_at) }}</td>
                   <td>{{ formatDate(card.updated_at) }}</td>
                   <td class="text-center">

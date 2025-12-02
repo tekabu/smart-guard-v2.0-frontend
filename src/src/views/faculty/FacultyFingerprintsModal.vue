@@ -28,7 +28,6 @@ const editingFingerprint = ref(null);
 // Form data
 const formData = ref({
   fingerprint_id: "",
-  active: true,
 });
 
 // Form validation
@@ -75,7 +74,6 @@ async function loadFingerprints() {
 function showAddForm() {
   formData.value = {
     fingerprint_id: "",
-    active: true,
   };
   formErrors.value = {};
   isEditMode.value = false;
@@ -87,7 +85,6 @@ function showAddForm() {
 function showEditForm(fingerprint) {
   formData.value = {
     fingerprint_id: fingerprint.fingerprint_id,
-    active: fingerprint.active,
   };
   formErrors.value = {};
   isEditMode.value = true;
@@ -100,7 +97,6 @@ function cancelForm() {
   showFingerprintForm.value = false;
   formData.value = {
     fingerprint_id: "",
-    active: true,
   };
   formErrors.value = {};
   isEditMode.value = false;
@@ -126,7 +122,7 @@ async function saveFingerprint() {
     const fingerprintData = {
       user_id: props.faculty.id,
       fingerprint_id: parseInt(formData.value.fingerprint_id),
-      active: formData.value.active,
+      active: true,
     };
 
     if (isEditMode.value) {
@@ -221,19 +217,6 @@ function formatDate(dateString) {
                     {{ formErrors.fingerprint_id }}
                   </div>
                 </div>
-                <div class="mb-3">
-                  <div class="form-check form-switch">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="fingerprint-active"
-                      v-model="formData.active"
-                    />
-                    <label class="form-check-label" for="fingerprint-active">
-                      Active
-                    </label>
-                  </div>
-                </div>
                 <div class="d-flex gap-2">
                   <button type="submit" class="btn btn-primary btn-sm">
                     <i class="fa fa-save me-1"></i>
@@ -262,7 +245,6 @@ function formatDate(dateString) {
               <thead>
                 <tr>
                   <th>Fingerprint ID</th>
-                  <th>Status</th>
                   <th>Created At</th>
                   <th>Updated At</th>
                   <th class="text-center">Actions</th>
@@ -270,17 +252,12 @@ function formatDate(dateString) {
               </thead>
               <tbody>
                 <tr v-if="fingerprints.length === 0">
-                  <td colspan="5" class="text-center text-muted">
+                  <td colspan="4" class="text-center text-muted">
                     No fingerprints registered
                   </td>
                 </tr>
                 <tr v-for="fingerprint in fingerprints" :key="fingerprint.id">
                   <td>{{ fingerprint.fingerprint_id }}</td>
-                  <td>
-                    <span :class="['badge', fingerprint.active ? 'bg-success' : 'bg-danger']">
-                      {{ fingerprint.active ? 'Active' : 'Inactive' }}
-                    </span>
-                  </td>
                   <td>{{ formatDate(fingerprint.created_at) }}</td>
                   <td>{{ formatDate(fingerprint.updated_at) }}</td>
                   <td class="text-center">
