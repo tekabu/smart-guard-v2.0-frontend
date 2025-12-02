@@ -71,6 +71,11 @@ export default {
       icon: "si si-clock",
       to: "sectionSubjectSchedules",
     },
+    {
+      name: "Class Sessions",
+      icon: "si si-calendar",
+      to: "classSessions",
+    },
   ],
   boxed: [
     {
