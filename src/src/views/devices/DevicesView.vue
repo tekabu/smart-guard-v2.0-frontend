@@ -20,7 +20,7 @@ import devicesService from "@/services/devices";
 const devices = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
-const pageSize = ref(10);
+const pageSize = ref("10");
 
 // Helper variables
 const cols = reactive([
@@ -259,24 +259,15 @@ function formatDate(dateString) {
           :ds-data="devices"
           :ds-sortby="sortBy"
           :ds-search-in="['device_id', 'door_open_duration_seconds']"
-          :ds-page-size="pageSize"
+          :ds-page-size="Number(pageSize)"
         >
           <div class="row" :data-page-count="ds.dsPagecount">
             <div class="col-md-6 py-2">
-              <div class="d-flex align-items-center gap-2">
-                <label class="form-label mb-0">Show</label>
-                <select
-                  class="form-select"
-                  style="width: auto; min-width: 65px; max-width: 80px;"
-                  v-model.number="pageSize"
-                >
-                  <option :value="10">10</option>
-                  <option :value="25">25</option>
-                  <option :value="50">50</option>
-                  <option :value="100">100</option>
-                </select>
-                <label class="form-label mb-0">entries</label>
-              </div>
+              <DatasetShow
+                v-model="pageSize"
+                ds-show-label="Show"
+                style="display: flex; align-items: center; gap: 0.5rem; max-width: 200px;"
+              />
             </div>
             <div class="col-md-6 py-2">
               <DatasetSearch ds-search-placeholder="Search..." />
@@ -468,5 +459,59 @@ th.sort {
 
 .modal {
   z-index: 1050;
+}
+
+/* Hide the "entries" text from custom select */
+.d-flex align-items-center label:last-child {
+  display: none;
+/* Hide the "entries" text from DatasetShow */
+.form-inline label:nth-child(3) {
+  display: none;
+}
+
+/* Alternative approach - hide all labels after the select */
+.form-inline select + label {
+  display: none;
+}
+
+/* More aggressive approach - hide labels containing "entries" */
+.form-inline label:contains("entries") {
+  display: none;
+}
+
+/* Hide any label that comes after the select in form-inline */
+.form-inline label:not(:first-child) {
+  display: none;
+}
+
+/* Make the select smaller in DatasetShow - more specific selectors */
+.form-inline select.form-control {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+}
+
+.form-inline .form-control.mr-1 {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+}
+
+.form-inline .form-control.ml-1 {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+}
+
+/* Additional selectors for DatasetShow component */
+.form-inline .form-select {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+}
+
+.form-inline label:last-of-type {
+  display: none;
+}
 }
 </style>
