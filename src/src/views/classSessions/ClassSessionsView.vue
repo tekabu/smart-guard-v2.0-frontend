@@ -40,6 +40,10 @@ const filters = ref({
   start_date: ""
 });
 
+// Modal state
+const showCloseModal = ref(false);
+const sessionToClose = ref(null);
+
 // Helper variables
 const cols = reactive([
   {
@@ -239,22 +243,37 @@ async function startSession(session) {
   }
 }
 
+// Show close confirmation
+function confirmCloseSession(session) {
+  sessionToClose.value = session;
+  showCloseModal.value = true;
+}
+
 // Close session
-async function closeSession(session) {
+async function closeSession() {
   try {
-    const response = await scheduleSessionsService.close(session.id);
+    const response = await scheduleSessionsService.close(sessionToClose.value.id);
 
     // Update the session in the local list
-    const index = sessions.value.findIndex(s => s.id === session.id);
+    const index = sessions.value.findIndex(s => s.id === sessionToClose.value.id);
     if (index !== -1) {
       sessions.value[index] = { ...sessions.value[index], ...response.data };
     }
+
+    showCloseModal.value = false;
+    sessionToClose.value = null;
 
     showSuccessToast('Session closed successfully');
   } catch (err) {
     console.error('Error closing session:', err);
     showErrorToast(err);
   }
+}
+
+// Cancel close
+function cancelClose() {
+  showCloseModal.value = false;
+  sessionToClose.value = null;
 }
 
 // Format date
@@ -435,7 +454,7 @@ function formatTime(time24) {
                               v-if="row.start_time && !row.end_time"
                               type="button"
                               class="btn btn-sm btn-danger"
-                              @click="closeSession(row)"
+                              @click="confirmCloseSession(row)"
                               title="Close Session"
                             >
                               <i class="fa fa-fw fa-stop"></i>
@@ -460,6 +479,58 @@ function formatTime(time24) {
     </BaseBlock>
   </div>
   <!-- END Page Content -->
+
+  <!-- Close Session Confirmation Modal -->
+  <div
+    class="modal"
+    :class="{ show: showCloseModal, 'd-block': showCloseModal }"
+    tabindex="-1"
+    role="dialog"
+  >
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Close Class Session</h5>
+          <button
+            type="button"
+            class="btn-close"
+            @click="cancelClose"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <p v-if="sessionToClose">
+            Are you sure you want to close this class session?
+          </p>
+          <p class="text-muted mb-0">
+            Section: <strong>{{ sessionToClose?.section }}</strong><br>
+            Subject: <strong>{{ sessionToClose?.subject }}</strong><br>
+            Faculty: <strong>{{ sessionToClose?.faculty?.name || sessionToClose?.faculty }}</strong><br>
+            Day: <strong>{{ sessionToClose?.day_of_week }}</strong><br>
+            Date: <strong>{{ formatDate(sessionToClose?.start_date) }}</strong><br>
+            Time: <strong>{{ formatTime(sessionToClose?.start_time) }} - {{ formatTime(sessionToClose?.end_time) }}</strong>
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="cancelClose"
+          >
+            Cancel
+          </button>
+          <button type="button" class="btn btn-danger" @click="closeSession">
+            <i class="fa fa-stop me-1"></i> Close Session
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    v-if="showCloseModal"
+    class="modal-backdrop fade"
+    :class="{ show: showCloseModal }"
+  ></div>
 </template>
 
 <style lang="scss" scoped>
@@ -546,5 +617,27 @@ th.sort {
   width: 60px !important;
   min-width: 60px !important;
   max-width: 60px !important;
+}
+
+.modal.show {
+  display: block;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+}
+
+.modal-backdrop.show {
+  opacity: 0.5;
+}
+
+.modal {
+  z-index: 1050;
 }
 </style>
