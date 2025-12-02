@@ -128,6 +128,31 @@ const resetFilters = () => {
 onMounted(() => {
   // Fetch students on component mount
   applyFilters();
+  
+  // Remove "entries" text and resize select from DatasetShow component
+  setTimeout(() => {
+    const formInlineElements = document.querySelectorAll('.form-inline');
+    formInlineElements.forEach(element => {
+      const labels = element.querySelectorAll('label');
+      labels.forEach((label, index) => {
+        if (label.textContent.includes('entries')) {
+          label.style.display = 'none';
+        }
+        // Also hide the last label if it's not the first one
+        if (index > 0 && index === labels.length - 1) {
+          label.style.display = 'none';
+        }
+      });
+      
+      // Make select smaller
+      const selectElement = element.querySelector('select');
+      if (selectElement) {
+        selectElement.style.width = '60px';
+        selectElement.style.minWidth = '60px';
+        selectElement.style.maxWidth = '60px';
+      }
+    });
+  }, 100);
 });
 
 // Apply filters
@@ -347,7 +372,7 @@ function openFingerprintModal(student) {
             <div class="col-md-6 py-2">
               <DatasetShow
                 v-model="pageSize"
-                ds-show-label="Show {entries}"
+                ds-show-label="Show"
                 style="display: flex; align-items: center; gap: 0.5rem; max-width: 200px;"
               />
             </div>
@@ -573,5 +598,44 @@ th.sort {
 
 .modal {
   z-index: 1050;
+}
+
+/* Hide the "entries" text from DatasetShow */
+.form-inline label:nth-child(3) {
+  display: none;
+}
+
+/* Alternative approach - hide all labels after the select */
+.form-inline select + label {
+  display: none;
+}
+
+/* More aggressive approach - hide labels containing "entries" */
+.form-inline label:contains("entries") {
+  display: none;
+}
+
+/* Hide any label that comes after the select in form-inline */
+.form-inline label:not(:first-child) {
+  display: none;
+}
+
+/* Make the select smaller in DatasetShow - more specific selectors */
+.form-inline select.form-control {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+}
+
+.form-inline .form-control.mr-1 {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+}
+
+.form-inline .form-control.ml-1 {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
 }
 </style>
