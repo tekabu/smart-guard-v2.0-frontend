@@ -27,42 +27,60 @@ const pageSize = ref(10);
 const availableSectionSubjects = ref([]);
 const availableRooms = ref([]);
 
-// Computed filter options with natural sorting from table data
-const sectionOptions = computed(() => {
-  if (!schedules.value || !schedules.value.length) return ['All'];
-  const sections = [...new Set(schedules.value
-    .map(s => s.section_subject?.section?.section)
-    .filter(s => s))];
-  return getSortedFilterOptions(sections);
+// Get unique sections from schedules
+const uniqueSections = computed(() => {
+  if (!schedules.value || !schedules.value.length) return [];
+  const sectionsMap = new Map();
+  schedules.value.forEach(s => {
+    const section = s.section_subject?.section;
+    if (section?.id && !sectionsMap.has(section.id)) {
+      sectionsMap.set(section.id, section);
+    }
+  });
+  return Array.from(sectionsMap.values()).sort((a, b) => naturalCompare(a.section, b.section));
 });
-const subjectOptions = computed(() => {
-  if (!schedules.value || !schedules.value.length) return ['All'];
-  const subjects = [...new Set(schedules.value
-    .map(s => s.section_subject?.subject?.subject)
-    .filter(s => s))];
-  return getSortedFilterOptions(subjects);
+
+// Get unique subjects from schedules
+const uniqueSubjects = computed(() => {
+  if (!schedules.value || !schedules.value.length) return [];
+  const subjectsMap = new Map();
+  schedules.value.forEach(s => {
+    const subject = s.section_subject?.subject;
+    if (subject?.id && !subjectsMap.has(subject.id)) {
+      subjectsMap.set(subject.id, subject);
+    }
+  });
+  return Array.from(subjectsMap.values()).sort((a, b) => naturalCompare(a.subject, b.subject));
 });
-const dayOptions = computed(() => {
-  if (!schedules.value || !schedules.value.length) return ['All'];
+
+// Get unique days from schedules
+const uniqueDays = computed(() => {
+  if (!schedules.value || !schedules.value.length) return [];
   const days = [...new Set(schedules.value
     .map(s => s.day_of_week)
     .filter(d => d))];
-  return getSortedFilterOptions(days);
+  return getSortedFilterOptions(days).filter(d => d !== 'All');
 });
-const roomOptions = computed(() => {
-  if (!schedules.value || !schedules.value.length) return ['All'];
-  const rooms = [...new Set(schedules.value
-    .map(s => s.room?.room_number)
-    .filter(r => r))];
-  return getSortedFilterOptions(rooms);
+
+// Get unique rooms from schedules
+const uniqueRooms = computed(() => {
+  if (!schedules.value || !schedules.value.length) return [];
+  const roomsMap = new Map();
+  schedules.value.forEach(s => {
+    const room = s.room;
+    if (room?.id && !roomsMap.has(room.id)) {
+      roomsMap.set(room.id, room);
+    }
+  });
+  return Array.from(roomsMap.values()).sort((a, b) => naturalCompare(a.room, b.room));
 });
 
 // Filters
 const filters = ref({
-  section: "All",
-  subject: "All",
-  day: "All",
-  room: "All"
+  section_id: "All",
+  subject_id: "All",
+  day_of_week: "All",
+  room_id: "All"
 });
 
 // Computed property to format section subjects for modal dropdown
@@ -195,10 +213,10 @@ const applyFilters = async () => {
     error.value = null;
 
     const filterData = {};
-    if (filters.value.section !== "All") filterData.section = filters.value.section;
-    if (filters.value.subject !== "All") filterData.subject = filters.value.subject;
-    if (filters.value.day !== "All") filterData.day_of_week = filters.value.day;
-    if (filters.value.room !== "All") filterData.room = filters.value.room;
+    if (filters.value.section_id !== "All") filterData.section_id = filters.value.section_id;
+    if (filters.value.subject_id !== "All") filterData.subject_id = filters.value.subject_id;
+    if (filters.value.day_of_week !== "All") filterData.day_of_week = filters.value.day_of_week;
+    if (filters.value.room_id !== "All") filterData.room_id = filters.value.room_id;
 
     if (Object.keys(filterData).length > 0) {
       const response = await sectionSubjectSchedulesService.getFiltered(filterData);
@@ -218,10 +236,10 @@ const applyFilters = async () => {
 // Reset filters
 const resetFilters = () => {
   filters.value = {
-    section: "All",
-    subject: "All",
-    day: "All",
-    room: "All"
+    section_id: "All",
+    subject_id: "All",
+    day_of_week: "All",
+    room_id: "All"
   };
   fetchAllData();
 };
@@ -353,49 +371,53 @@ function formatTime(time24) {
       <div class="row">
         <div class="col-md-3">
           <label class="form-label">Section</label>
-          <select class="form-select" v-model="filters.section" @change="applyFilters">
+          <select class="form-select" v-model="filters.section_id" @change="applyFilters">
+            <option value="All">All Sections</option>
             <option
-              v-for="section in sectionOptions"
-              :key="section"
-              :value="section"
+              v-for="section in uniqueSections"
+              :key="section.id"
+              :value="section.id"
             >
-              {{ section === 'All' ? 'All Sections' : section }}
+              {{ section.section }}
             </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Subject</label>
-          <select class="form-select" v-model="filters.subject" @change="applyFilters">
+          <select class="form-select" v-model="filters.subject_id" @change="applyFilters">
+            <option value="All">All Subjects</option>
             <option
-              v-for="subject in subjectOptions"
-              :key="subject"
-              :value="subject"
+              v-for="subject in uniqueSubjects"
+              :key="subject.id"
+              :value="subject.id"
             >
-              {{ subject === 'All' ? 'All Subjects' : subject }}
+              {{ subject.subject }}
             </option>
           </select>
         </div>
         <div class="col-md-2">
           <label class="form-label">Day</label>
-          <select class="form-select" v-model="filters.day" @change="applyFilters">
+          <select class="form-select" v-model="filters.day_of_week" @change="applyFilters">
+            <option value="All">All Days</option>
             <option
-              v-for="day in dayOptions"
+              v-for="day in uniqueDays"
               :key="day"
               :value="day"
             >
-              {{ day === 'All' ? 'All Days' : day }}
+              {{ day }}
             </option>
           </select>
         </div>
         <div class="col-md-2">
           <label class="form-label">Room</label>
-          <select class="form-select" v-model="filters.room" @change="applyFilters">
+          <select class="form-select" v-model="filters.room_id" @change="applyFilters">
+            <option value="All">All Rooms</option>
             <option
-              v-for="room in roomOptions"
-              :key="room"
-              :value="room"
+              v-for="room in uniqueRooms"
+              :key="room.id"
+              :value="room.id"
             >
-              {{ room === 'All' ? 'All Rooms' : room }}
+              {{ room.room }}
             </option>
           </select>
         </div>

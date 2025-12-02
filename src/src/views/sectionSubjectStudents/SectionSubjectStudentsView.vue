@@ -28,34 +28,47 @@ const pageSize = ref(10);
 const availableSectionSubjects = ref([]);
 const availableStudents = ref([]);
 
-// Computed filter options with natural sorting
-const sectionOptions = computed(() => {
-  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return ['All'];
-  const sections = [...new Set(availableSectionSubjects.value
-    .map(ss => ss.section?.section)
-    .filter(s => s))];
-  return getSortedFilterOptions(sections);
+// Get unique sections from availableSectionSubjects
+const uniqueSections = computed(() => {
+  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return [];
+  const sectionsMap = new Map();
+  availableSectionSubjects.value.forEach(ss => {
+    if (ss.section?.id && !sectionsMap.has(ss.section.id)) {
+      sectionsMap.set(ss.section.id, ss.section);
+    }
+  });
+  return Array.from(sectionsMap.values()).sort((a, b) => naturalCompare(a.section, b.section));
 });
-const subjectOptions = computed(() => {
-  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return ['All'];
-  const subjects = [...new Set(availableSectionSubjects.value
-    .map(ss => ss.subject?.subject)
-    .filter(s => s))];
-  return getSortedFilterOptions(subjects);
+
+// Get unique subjects from availableSectionSubjects
+const uniqueSubjects = computed(() => {
+  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return [];
+  const subjectsMap = new Map();
+  availableSectionSubjects.value.forEach(ss => {
+    if (ss.subject?.id && !subjectsMap.has(ss.subject.id)) {
+      subjectsMap.set(ss.subject.id, ss.subject);
+    }
+  });
+  return Array.from(subjectsMap.values()).sort((a, b) => naturalCompare(a.subject, b.subject));
 });
-const facultyOptions = computed(() => {
-  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return ['All'];
-  const faculty = [...new Set(availableSectionSubjects.value
-    .map(ss => ss.faculty?.name)
-    .filter(f => f))];
-  return getSortedFilterOptions(faculty);
+
+// Get unique faculty from availableSectionSubjects
+const uniqueFaculty = computed(() => {
+  if (!availableSectionSubjects.value || !availableSectionSubjects.value.length) return [];
+  const facultyMap = new Map();
+  availableSectionSubjects.value.forEach(ss => {
+    if (ss.faculty?.id && !facultyMap.has(ss.faculty.id)) {
+      facultyMap.set(ss.faculty.id, ss.faculty);
+    }
+  });
+  return Array.from(facultyMap.values()).sort((a, b) => naturalCompare(a.name, b.name));
 });
 
 // Filters
 const filters = ref({
-  section: "All",
-  subject: "All",
-  faculty: "All"
+  section_id: "All",
+  subject_id: "All",
+  faculty_id: "All"
 });
 
 // Computed property to format section subjects for modal dropdown
@@ -178,9 +191,9 @@ const applyFilters = async () => {
     error.value = null;
 
     const filterData = {};
-    if (filters.value.section !== "All") filterData.section = filters.value.section;
-    if (filters.value.subject !== "All") filterData.subject = filters.value.subject;
-    if (filters.value.faculty !== "All") filterData.faculty = filters.value.faculty;
+    if (filters.value.section_id !== "All") filterData.section_id = filters.value.section_id;
+    if (filters.value.subject_id !== "All") filterData.subject_id = filters.value.subject_id;
+    if (filters.value.faculty_id !== "All") filterData.faculty_id = filters.value.faculty_id;
 
     if (Object.keys(filterData).length > 0) {
       const response = await sectionSubjectStudentsService.getFiltered(filterData);
@@ -200,9 +213,9 @@ const applyFilters = async () => {
 // Reset filters
 const resetFilters = () => {
   filters.value = {
-    section: "All",
-    subject: "All",
-    faculty: "All"
+    section_id: "All",
+    subject_id: "All",
+    faculty_id: "All"
   };
   fetchAllData();
 };
@@ -344,37 +357,40 @@ function formatDate(dateString) {
       <div class="row">
         <div class="col-md-3">
           <label class="form-label">Section</label>
-          <select class="form-select" v-model="filters.section" @change="applyFilters">
+          <select class="form-select" v-model="filters.section_id" @change="applyFilters">
+            <option value="All">All Sections</option>
             <option
-              v-for="section in sectionOptions"
-              :key="section"
-              :value="section"
+              v-for="section in uniqueSections"
+              :key="section.id"
+              :value="section.id"
             >
-              {{ section === 'All' ? 'All Sections' : section }}
+              {{ section.section }}
             </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Subject</label>
-          <select class="form-select" v-model="filters.subject" @change="applyFilters">
+          <select class="form-select" v-model="filters.subject_id" @change="applyFilters">
+            <option value="All">All Subjects</option>
             <option
-              v-for="subject in subjectOptions"
-              :key="subject"
-              :value="subject"
+              v-for="subject in uniqueSubjects"
+              :key="subject.id"
+              :value="subject.id"
             >
-              {{ subject === 'All' ? 'All Subjects' : subject }}
+              {{ subject.subject }}
             </option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Faculty</label>
-          <select class="form-select" v-model="filters.faculty" @change="applyFilters">
+          <select class="form-select" v-model="filters.faculty_id" @change="applyFilters">
+            <option value="All">All Faculty</option>
             <option
-              v-for="faculty in facultyOptions"
-              :key="faculty"
-              :value="faculty"
+              v-for="faculty in uniqueFaculty"
+              :key="faculty.id"
+              :value="faculty.id"
             >
-              {{ faculty === 'All' ? 'All Faculty' : faculty }}
+              {{ faculty.name }}
             </option>
           </select>
         </div>

@@ -29,26 +29,10 @@ const availableSections = ref([]);
 const availableSubjects = ref([]);
 const availableFaculty = ref([]);
 
-// Computed filter options with natural sorting from table data
-const sectionOptions = computed(() => {
-  if (!sectionSubjects.value || !sectionSubjects.value.length) return ['All'];
-  const sections = [...new Set(sectionSubjects.value
-    .map(ss => ss.section?.section)
-    .filter(s => s))];
-  return getSortedFilterOptions(sections);
-});
-const subjectOptions = computed(() => {
-  if (!sectionSubjects.value || !sectionSubjects.value.length) return ['All'];
-  const subjects = [...new Set(sectionSubjects.value
-    .map(ss => ss.subject?.subject)
-    .filter(s => s))];
-  return getSortedFilterOptions(subjects);
-});
-
 // Filters
 const filters = ref({
-  section: "All",
-  subject: "All"
+  section_id: "All",
+  subject_id: "All"
 });
 
 // Helper variables
@@ -158,8 +142,8 @@ const applyFilters = async () => {
     error.value = null;
 
     const filterData = {};
-    if (filters.value.section !== "All") filterData.section = filters.value.section;
-    if (filters.value.subject !== "All") filterData.subject = filters.value.subject;
+    if (filters.value.section_id !== "All") filterData.section_id = filters.value.section_id;
+    if (filters.value.subject_id !== "All") filterData.subject_id = filters.value.subject_id;
 
     if (Object.keys(filterData).length > 0) {
       const response = await sectionSubjectsService.getFiltered(filterData);
@@ -179,8 +163,8 @@ const applyFilters = async () => {
 // Reset filters
 const resetFilters = () => {
   filters.value = {
-    section: "All",
-    subject: "All"
+    section_id: "All",
+    subject_id: "All"
   };
   fetchAllData();
 };
@@ -302,25 +286,27 @@ function formatDate(dateString) {
       <div class="row">
         <div class="col-md-4">
           <label class="form-label">Section</label>
-          <select class="form-select" v-model="filters.section" @change="applyFilters">
+          <select class="form-select" v-model="filters.section_id" @change="applyFilters">
+            <option value="All">All Sections</option>
             <option
-              v-for="section in sectionOptions"
-              :key="section"
-              :value="section"
+              v-for="section in availableSections"
+              :key="section.id"
+              :value="section.id"
             >
-              {{ section === 'All' ? 'All Sections' : section }}
+              {{ section.section }}
             </option>
           </select>
         </div>
         <div class="col-md-4">
           <label class="form-label">Subject</label>
-          <select class="form-select" v-model="filters.subject" @change="applyFilters">
+          <select class="form-select" v-model="filters.subject_id" @change="applyFilters">
+            <option value="All">All Subjects</option>
             <option
-              v-for="subject in subjectOptions"
-              :key="subject"
-              :value="subject"
+              v-for="subject in availableSubjects"
+              :key="subject.id"
+              :value="subject.id"
             >
-              {{ subject === 'All' ? 'All Subjects' : subject }}
+              {{ subject.subject }}
             </option>
           </select>
         </div>

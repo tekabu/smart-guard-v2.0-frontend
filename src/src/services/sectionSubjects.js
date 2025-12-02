@@ -15,8 +15,8 @@ const sectionSubjectsService = {
   async getFiltered(filters = {}) {
     const params = new URLSearchParams();
 
-    if (filters.section) params.append('section', filters.section);
-    if (filters.subject) params.append('subject', filters.subject);
+    if (filters.section_id) params.append('section_id', filters.section_id);
+    if (filters.subject_id) params.append('subject_id', filters.subject_id);
 
     const response = await api.get(`/api/section-subjects?${params.toString()}`);
     return response.data;

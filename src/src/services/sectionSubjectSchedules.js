@@ -15,10 +15,10 @@ const sectionSubjectSchedulesService = {
   async getFiltered(filters = {}) {
     const params = new URLSearchParams();
 
-    if (filters.section) params.append('section', filters.section);
-    if (filters.subject) params.append('subject', filters.subject);
+    if (filters.section_id) params.append('section_id', filters.section_id);
+    if (filters.subject_id) params.append('subject_id', filters.subject_id);
     if (filters.day_of_week) params.append('day_of_week', filters.day_of_week);
-    if (filters.room) params.append('room', filters.room);
+    if (filters.room_id) params.append('room_id', filters.room_id);
 
     const response = await api.get(`/api/section-subject-schedules?${params.toString()}`);
     return response.data;
