@@ -228,7 +228,8 @@ function initMqttConnection() {
 
           // Check if this message is for our current request
           if (payload.reference === currentReference.value && payload.mode === 'REGISTER') {
-            if (payload.data) {
+            // Only capture data if it exists and mode is REGISTER
+            if (payload.hasOwnProperty('data') && payload.data) {
               formData.value.card_id = payload.data;
               showSuccessToast('RFID card scanned successfully');
               isScanning.value = false;

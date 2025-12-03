@@ -1,7 +1,9 @@
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onUnmounted } from "vue";
 import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 import userFingerprintsService from "@/services/userFingerprints";
+import mqtt from "mqtt";
+import Swal from "sweetalert2";
 
 const props = defineProps({
   student: {
@@ -33,6 +35,25 @@ const formData = ref({
 // Form validation
 const formErrors = ref({});
 
+// MQTT state
+const mqttClient = ref(null);
+const isScanning = ref(false);
+const isMqttConnected = ref(false);
+const isMqttConnecting = ref(false);
+const currentReference = ref(null);
+const MQTT_BROKER = "ws://broker.emqx.io:8083/mqtt";
+const TOPIC_PUBLISH = "dJfmRURS5LaJtZ1NZAHX86A9uAk4LZ-smart-guard-fingerprint";
+const TOPIC_SUBSCRIBE = "dJfmRURS5LaJtZ1NZAHX86A9uAk4LZ-smart-guard-fingerprint-response";
+
+// Toast for showing log messages
+const toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+});
+
 // Watch for student prop changes to load fingerprints
 watch(
   () => props.student,
@@ -50,6 +71,9 @@ watch(
   (newShow) => {
     if (newShow && props.student?.id) {
       loadFingerprints();
+    } else if (!newShow) {
+      // Close MQTT connection when modal closes
+      disconnectMqtt();
     }
   }
 );
@@ -168,6 +192,148 @@ function formatDate(dateString) {
   if (!dateString) return '-';
   return new Date(dateString).toLocaleString();
 }
+
+// Generate UUID v4
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+// Initialize MQTT connection
+function initMqttConnection() {
+  if (mqttClient.value) {
+    return; // Already connected
+  }
+
+  try {
+    isMqttConnecting.value = true;
+    isMqttConnected.value = false;
+    mqttClient.value = mqtt.connect(MQTT_BROKER);
+
+    mqttClient.value.on('connect', () => {
+      console.log('Connected to MQTT broker (Fingerprint)');
+      mqttClient.value.subscribe(TOPIC_SUBSCRIBE, (err) => {
+        if (err) {
+          console.error('Failed to subscribe:', err);
+          showErrorToast('Failed to connect to fingerprint scanner');
+          isMqttConnecting.value = false;
+          isMqttConnected.value = false;
+        } else {
+          console.log('Subscribed to fingerprint response topic');
+          isMqttConnecting.value = false;
+          isMqttConnected.value = true;
+          showSuccessToast('Connected to fingerprint scanner');
+        }
+      });
+    });
+
+    mqttClient.value.on('message', (topic, message) => {
+      if (topic === TOPIC_SUBSCRIBE) {
+        try {
+          const payload = JSON.parse(message.toString());
+          console.log('Received MQTT fingerprint message:', payload);
+
+          // Check if this message is for our current request and mode is REGISTER
+          if (payload.reference === currentReference.value && payload.mode === 'REGISTER') {
+            // Handle log messages (if present)
+            if (payload.hasOwnProperty('log') && payload.log) {
+              toast.fire({
+                icon: 'info',
+                title: payload.log
+              });
+            }
+
+            // Only capture data if it exists and mode is REGISTER
+            if (payload.hasOwnProperty('data') && payload.data !== null && payload.data !== undefined) {
+              formData.value.fingerprint_id = payload.data.toString();
+              showSuccessToast('Fingerprint scanned successfully');
+              isScanning.value = false;
+              currentReference.value = null;
+            }
+          }
+        } catch (err) {
+          console.error('Error parsing MQTT message:', err);
+        }
+      }
+    });
+
+    mqttClient.value.on('error', (err) => {
+      console.error('MQTT error:', err);
+      showErrorToast('MQTT connection error');
+      isScanning.value = false;
+      isMqttConnecting.value = false;
+      isMqttConnected.value = false;
+    });
+
+    mqttClient.value.on('close', () => {
+      console.log('MQTT connection closed (Fingerprint)');
+      mqttClient.value = null;
+      isMqttConnected.value = false;
+      isMqttConnecting.value = false;
+    });
+  } catch (err) {
+    console.error('Failed to connect to MQTT broker:', err);
+    showErrorToast('Failed to connect to fingerprint scanner');
+    isMqttConnecting.value = false;
+    isMqttConnected.value = false;
+  }
+}
+
+// Start fingerprint scan
+function startFingerprintScan() {
+  if (!mqttClient.value || !mqttClient.value.connected) {
+    showErrorToast('Not connected to fingerprint scanner. Please try again.');
+    return;
+  }
+
+  isScanning.value = true;
+  currentReference.value = generateUUID();
+
+  const payload = {
+    reference: currentReference.value,
+    position: "FRONT",
+    mode: "REGISTER"
+  };
+
+  console.log('Publishing MQTT fingerprint message:', payload);
+  mqttClient.value.publish(TOPIC_PUBLISH, JSON.stringify(payload), (err) => {
+    if (err) {
+      console.error('Failed to publish:', err);
+      showErrorToast('Failed to send scan request');
+      isScanning.value = false;
+      currentReference.value = null;
+    } else {
+      showSuccessToast('Waiting for fingerprint scan...');
+    }
+  });
+}
+
+// Stop scanning
+function stopFingerprintScan() {
+  isScanning.value = false;
+  currentReference.value = null;
+}
+
+// Disconnect MQTT
+function disconnectMqtt() {
+  if (mqttClient.value) {
+    console.log('Disconnecting from MQTT broker (Fingerprint)');
+    isScanning.value = false;
+    currentReference.value = null;
+    isMqttConnected.value = false;
+    isMqttConnecting.value = false;
+    mqttClient.value.end();
+    mqttClient.value = null;
+  }
+}
+
+// Cleanup MQTT connection on unmount
+onUnmounted(() => {
+  disconnectMqtt();
+});
 </script>
 
 <template>
@@ -205,24 +371,60 @@ function formatDate(dateString) {
               <form @submit.prevent="saveFingerprint">
                 <div class="mb-3">
                   <label for="fingerprint-id" class="form-label">Fingerprint ID <span class="text-danger">*</span></label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    :class="{ 'is-invalid': formErrors.fingerprint_id }"
-                    id="fingerprint-id"
-                    v-model="formData.fingerprint_id"
-                    required
-                  />
-                  <div v-if="formErrors.fingerprint_id" class="invalid-feedback">
+                  <div class="input-group">
+                    <input
+                      type="number"
+                      class="form-control"
+                      :class="{ 'is-invalid': formErrors.fingerprint_id }"
+                      id="fingerprint-id"
+                      v-model="formData.fingerprint_id"
+                      required
+                      :disabled="isScanning"
+                    />
+                    <!-- Show Connect button when not connected -->
+                    <button
+                      v-if="!isMqttConnected && !isEditMode"
+                      type="button"
+                      class="btn btn-secondary"
+                      @click="initMqttConnection"
+                      :disabled="isMqttConnecting"
+                    >
+                      <i class="fa" :class="isMqttConnecting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
+                      {{ isMqttConnecting ? 'Connecting...' : 'Connect Scanner' }}
+                    </button>
+                    <!-- Show Scan button when connected -->
+                    <button
+                      v-if="isMqttConnected && !isEditMode"
+                      type="button"
+                      class="btn btn-info"
+                      :class="{ 'btn-warning': isScanning }"
+                      @click="isScanning ? stopFingerprintScan() : startFingerprintScan()"
+                    >
+                      <i class="fa" :class="isScanning ? 'fa-stop' : 'fa-fingerprint'"></i>
+                      {{ isScanning ? 'Stop Scan' : 'Scan Fingerprint' }}
+                    </button>
+                  </div>
+                  <div v-if="formErrors.fingerprint_id" class="invalid-feedback d-block">
                     {{ formErrors.fingerprint_id }}
                   </div>
+                  <small v-if="isScanning" class="text-warning d-block mt-1">
+                    <i class="fa fa-spinner fa-spin me-1"></i>
+                    Waiting for fingerprint scan... Please place your finger on the scanner.
+                  </small>
+                  <small v-if="isMqttConnected && !isScanning && !isEditMode" class="text-success d-block mt-1">
+                    <i class="fa fa-check-circle me-1"></i>
+                    Fingerprint scanner connected. Click "Scan Fingerprint" to register.
+                  </small>
+                  <small v-if="isEditMode" class="text-muted d-block mt-1">
+                    Fingerprint scanning is only available when adding new fingerprints.
+                  </small>
                 </div>
                 <div class="d-flex gap-2">
-                  <button type="submit" class="btn btn-primary btn-sm">
+                  <button type="submit" class="btn btn-primary btn-sm" :disabled="isScanning">
                     <i class="fa fa-save me-1"></i>
                     {{ isEditMode ? 'Update' : 'Add' }}
                   </button>
-                  <button type="button" class="btn btn-secondary btn-sm" @click="cancelForm">
+                  <button type="button" class="btn btn-secondary btn-sm" @click="cancelForm" :disabled="isScanning">
                     <i class="fa fa-times me-1"></i>
                     Cancel
                   </button>
