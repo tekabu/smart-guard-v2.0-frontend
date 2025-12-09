@@ -3,6 +3,7 @@ import { reactive, computed, onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 import { getErrorMessage, showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 import { getSortedFilterOptions, naturalCompare } from "@/utils/naturalSort";
+import { useRoute, onBeforeRouteUpdate } from "vue-router";
 
 import {
   Dataset,
@@ -119,6 +120,15 @@ onMounted(() => {
   // Fetch faculty on component mount
   applyFilters();
 
+  // Check for highlight query parameter
+  const route = useRoute();
+  if (route.query.highlight) {
+    // Wait for faculty data to load, then scroll to highlighted faculty
+    setTimeout(() => {
+      highlightAndScrollToFaculty(route.query.highlight);
+    }, 1000);
+  }
+
   // Remove "entries" text and resize select from DatasetShow component
   // Use multiple attempts to ensure it works even after slow page loads
   const hideEntriesText = () => {
@@ -150,6 +160,39 @@ onMounted(() => {
   setTimeout(hideEntriesText, 300);
   setTimeout(hideEntriesText, 500);
 });
+
+// Handle route updates
+onBeforeRouteUpdate((to, from) => {
+  if (to.query.highlight && to.query.highlight !== from.query.highlight) {
+    setTimeout(() => {
+      highlightAndScrollToFaculty(to.query.highlight);
+    }, 1000);
+  }
+});
+
+// Highlight and scroll to faculty
+function highlightAndScrollToFaculty(facultyId) {
+  const facultyRows = document.querySelectorAll('table tbody tr');
+  facultyRows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length > 0) {
+      const facultyIdCell = cells[0].textContent.trim();
+      if (facultyIdCell === facultyId) {
+        // Highlight the row
+        row.style.backgroundColor = '#fff3cd';
+        row.style.transition = 'background-color 2s';
+        
+        // Scroll to the row
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Remove highlight after 3 seconds
+        setTimeout(() => {
+          row.style.backgroundColor = '';
+        }, 3000);
+      }
+    }
+  });
+}
 
 // Apply filters
 const applyFilters = async () => {
@@ -295,6 +338,132 @@ function openFingerprintModal(facultyMember) {
   selectedFacultyForBiometric.value = facultyMember;
   showFingerprintModal.value = true;
 }
+
+// Print PDF function for faculty list
+function printFacultyListPDF() {
+  // Create a new window for printing
+  const printWindow = window.open('', '_blank');
+
+  // Generate the HTML content for the print window
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Faculty List Report</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+        }
+        h1 {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        .filters-info {
+          margin-bottom: 20px;
+          padding: 10px;
+          background-color: #f5f5f5;
+          border-radius: 5px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 20px;
+        }
+        th, td {
+          border: 1px solid #000;
+          padding: 8px;
+          text-align: left;
+        }
+        th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+        }
+        .badge {
+          padding: 3px 6px;
+          border-radius: 3px;
+          font-size: 11px;
+          font-weight: bold;
+        }
+        .badge-success {
+          background-color: #28a745;
+          color: white;
+        }
+        .badge-danger {
+          background-color: #dc3545;
+          color: white;
+        }
+        .footer {
+          text-align: center;
+          margin-top: 20px;
+          font-size: 12px;
+          color: #666;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Faculty List Report</h1>
+      ${generateFiltersInfo()}
+      <table>
+        <thead>
+          <tr>
+            <th>Faculty ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Clearance</th>
+            <th>Last Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${generateTableRows()}
+        </tbody>
+      </table>
+      <div class="footer">
+        Total Records: ${faculty.value.length}<br>
+        Generated on ${new Date().toLocaleString()}
+      </div>
+    </body>
+    </html>
+  `;
+
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+
+  // Wait for content to load, then print
+  printWindow.onload = function() {
+    printWindow.print();
+    printWindow.onafterprint = function() {
+      printWindow.close();
+    };
+  };
+}
+
+// Generate filters info for print
+function generateFiltersInfo() {
+  if (departmentFilter.value === "All") {
+    return '<div class="filters-info"><strong>Filter:</strong> All Departments</div>';
+  }
+  return `<div class="filters-info"><strong>Filter:</strong> Department: ${departmentFilter.value}</div>`;
+}
+
+// Generate table rows for print
+function generateTableRows() {
+  return faculty.value.map(row => `
+    <tr>
+      <td>${row.faculty_id || '-'}</td>
+      <td>${row.name || '-'}</td>
+      <td>${row.email || '-'}</td>
+      <td>${row.department || '-'}</td>
+      <td>
+        ${row.clearance === 1 || row.clearance === true 
+          ? '<span class="badge badge-success">YES</span>' 
+          : '<span class="badge badge-danger">NO</span>'}
+      </td>
+      <td>${formatDate(row.updated_at)}</td>
+    </tr>
+  `).join('');
+}
 </script>
 
 <template>
@@ -306,6 +475,13 @@ function openFingerprintModal(facultyMember) {
         @click="addFacultyMember"
       >
         <i class="fa fa-plus me-1"></i> Add New
+      </button>
+      <button 
+        class="btn btn-secondary ms-2" 
+        @click="printFacultyListPDF"
+        :disabled="faculty.length === 0"
+      >
+        <i class="fa fa-print me-1"></i> Print PDF
       </button>
     </template>
   </BasePageHeading>
