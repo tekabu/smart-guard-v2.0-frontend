@@ -26,16 +26,16 @@ export default {
       icon: "si si-graduation",
       to: "faculty",
     },
-    {
-      name: "Devices",
-      icon: "si si-screen-desktop",
-      to: "devices",
-    },
-    {
-      name: "Device Boards",
-      icon: "si si-wallet",
-      to: "deviceBoards",
-    },
+    // {
+    //   name: "Devices",
+    //   icon: "si si-screen-desktop",
+    //   to: "devices",
+    // },
+    // {
+    //   name: "Device Boards",
+    //   icon: "si si-wallet",
+    //   to: "deviceBoards",
+    // },
     {
       name: "Rooms",
       icon: "si si-home",

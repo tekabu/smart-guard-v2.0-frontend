@@ -153,7 +153,7 @@ watch(
         <div class="modal-body">
           <form @submit.prevent="saveRoom">
             <div class="row">
-              <div class="col-md-6">
+              <div class="col-md-12">
                 <!-- Room Number -->
                 <div class="mb-3">
                   <label for="room-number" class="form-label">Room Number <span class="text-danger">*</span></label>
@@ -173,10 +173,10 @@ watch(
                   <div class="form-text">Room number must be between 2 and 50 characters</div>
                 </div>
               </div>
-              
-              <div class="col-md-6">
+
+              <!-- <div class="col-md-6"> -->
                 <!-- Device -->
-                <div class="mb-3">
+                <!-- <div class="mb-3">
                   <label for="device-select" class="form-label">Device</label>
                   <select
                     class="form-select"
@@ -193,8 +193,8 @@ watch(
                     </option>
                   </select>
                   <div class="form-text">Assign a device to this room (optional)</div>
-                </div>
-              </div>
+                </div> -->
+              <!-- </div> -->
             </div>
           </form>
         </div>
