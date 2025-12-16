@@ -40,7 +40,7 @@ const isScanning = ref(false);
 const isMqttConnected = ref(false);
 const isMqttConnecting = ref(false);
 const currentReference = ref(null);
-const MQTT_BROKER = "ws://broker.emqx.io:8083/mqtt";
+const MQTT_BROKER = "wss://broker.emqx.io:8084/mqtt";
 const TOPIC_PUBLISH = "dJfmRURS5LaJtZ1NZAHX86A9uAk4LZ-smart-guard-rfid";
 const TOPIC_SUBSCRIBE = "dJfmRURS5LaJtZ1NZAHX86A9uAk4LZ-smart-guard-rfid-response";
 
