@@ -418,14 +418,6 @@ function openFingerprintModal(student) {
                             <button
                               type="button"
                               class="btn btn-sm btn-alt-secondary"
-                              @click="openRfidModal(row)"
-                              title="Manage RFID Cards"
-                            >
-                              <i class="fa fa-fw fa-id-card"></i>
-                            </button>
-                            <button
-                              type="button"
-                              class="btn btn-sm btn-alt-secondary"
                               @click="openFingerprintModal(row)"
                               title="Manage Fingerprints"
                             >
